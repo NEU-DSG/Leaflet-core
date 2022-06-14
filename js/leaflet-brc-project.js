@@ -1,0 +1,393 @@
+/**
+ * This document example-filtering.js contains code related to the mapping the point 
+ * in for the sample json data which is available in the file path 'res/data/query.json'.
+ */
+
+//A world Map is created here using leaflet js. 
+var map = L.map('map', {
+    zoom: 13,
+    center: [42.361145, -71.057083]
+});
+
+// Base tile creation and setup (stadia maps is being used here for tile layers).     
+var tiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
+    id: 'mapbox/streets-v11',
+    tileSize: 512,
+    zoomOffset: -1
+}).addTo(map);
+
+
+function style(feature) {
+    return {
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0,
+    };
+}
+
+// creating boundaries to boston area using geojson.
+L.geoJson(statesData, { style: style }).addTo(map);
+
+// osmUrl = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
+// var osm = L.TileLayer.boundaryCanvas(osmUrl, {
+//     boundary: statesData,
+// }).addTo(map);
+
+
+// geolet is a plugin, which will show the current location marker on the map.
+var geolet = L.geolet({
+    position: 'topleft'
+}).addTo(map);
+
+
+//Fetching the json data to parse, from the file path 'res/data/query.json'.
+fetch('./res/data/query.json')
+    .then(response => response.json())
+    .then(jsonData => {
+        generateMarkersOnMap(jsonData);
+    });
+
+var zoomLevel = 23;
+map.on('geolet_success', function(data) {
+    map.setView([data.latlng["lat"], data.latlng["lng"]], zoomLevel);
+})
+
+
+// Cluster markers setup (It helps to setup the cluster).
+var markers = L.markerClusterGroup({
+    zoomToBoundsOnClick: true
+});
+
+// wkt string literal parser.
+var wkt = new Wkt.Wkt();
+var myIcon = L.icon({
+    iconUrl: '../res/images/marker-icon-blue.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [0, -35],
+});
+
+
+/***
+ *  Creates the html string for the popups in the map.
+ * 
+ * @param {Object} binding - the binding data for a popup.
+ */
+function createPopUpHtmlForBinding(binding) {
+    let popUpHtml = "<div class='location-point-popup'><h1 class='location-point-popup-header'>Location Information:</h1><ul class='popup-list'>";
+    for (let property in binding) {
+        if (binding.hasOwnProperty(property) && property !== "coords") {
+            popUpHtml += "<li class='popup-item'>";
+            if (property === "work" || property === "image") {
+                popUpHtml += "<b>" + property + ":</b> " + "<a href='" + binding[property] + "' target='_blank'>" + binding[property] + "</a>";
+            } else {
+                popUpHtml += "<b>" + property + ":</b> " + (binding[property] ? binding[property] : "NA");
+            }
+            popUpHtml += "</li>";
+        }
+    }
+    popUpHtml += "</div>";
+    return popUpHtml;
+}
+
+/**
+ * Adds the binding data to the map.
+ * 
+ * @param {Object} binding - the binding to be added to the map.
+ */
+function addMarkerToTheMap(binding) {
+    var marker = L.marker(getCoordinates(binding), {
+        icon: myIcon,
+        markerInformation: binding
+    });
+    let popUpHtml = createPopUpHtmlForBinding(binding);
+    marker.bindPopup(popUpHtml);
+    markers.addLayer(marker);
+}
+
+
+/***
+ * Generates markers on the map from the parse json data
+ * 
+ * @param {Object} jsonData - the parsed json data.
+ */
+function generateMarkersOnMap(jsonData) {
+    let bindings = jsonData;
+    var categories = new Map();
+    var neighborhoods = new Map();
+    var yearInstalled = new Map();
+
+
+    // parsing through the json/bindings to add markers to the map and to genarate filters on left side.
+    bindings.forEach(binding => {
+        if (binding["yearInstalled"]) {
+            if (binding["yearInstalled"].includes("or")) {
+                var years = binding["yearInstalled"].split(" or ");
+                years.forEach(year => {
+                    var yearRange = year - (year % 10);
+                    var currentYear = yearInstalled.get(yearRange + "-" + (yearRange + 9));
+                    if (currentYear === undefined) {
+                        yearInstalled.set(yearRange + "-" + (yearRange + 9), 1);
+                    } else {
+                        yearInstalled.set(yearRange + "-" + (yearRange + 9), currentYear + 1);
+                    }
+                });
+            } else {
+                var yearRange = binding["yearInstalled"] - (binding["yearInstalled"] % 10);
+                var currentYear = yearInstalled.get(yearRange + "-" + (yearRange + 9));
+                if (currentYear === undefined) {
+                    yearInstalled.set(yearRange + "-" + (yearRange + 9), 1);
+                } else {
+                    yearInstalled.set(yearRange + "-" + (yearRange + 9), currentYear + 1);
+                }
+            }
+        } else {
+            var currentYear = yearInstalled.get("NA");
+            if (currentYear === undefined) {
+                yearInstalled.set("NA", 1);
+            } else {
+                yearInstalled.set("NA", currentYear + 1);
+            }
+        }
+        if (binding["categories"]) {
+            if (!binding["categories"].includes(";")) {
+                var currentCat = categories.get(binding["categories"]);
+                if (currentCat === undefined) {
+                    categories.set(binding["categories"], 1);
+                } else {
+                    categories.set(binding["categories"], currentCat + 1);
+                }
+            } else {
+                var multipleCat = binding["categories"].split("; ");
+                multipleCat.forEach(cat => {
+                    var currentCat = categories.get(cat);
+                    if (currentCat === undefined) {
+                        categories.set(cat, 1);
+                    } else {
+                        categories.set(cat, currentCat + 1);
+                    }
+                });
+            }
+        }
+        if (binding["neighborhoods"]) {
+            if (!binding["neighborhoods"].includes(";")) {
+                var currentNeig = neighborhoods.get(binding["neighborhoods"]);
+                if (currentNeig === undefined) {
+                    neighborhoods.set(binding["neighborhoods"], 1);
+                } else {
+                    neighborhoods.set(binding["neighborhoods"], currentNeig + 1);
+                }
+            } else {
+                var multipleNeig = binding["neighborhoods"].split("; ");
+                multipleNeig.forEach(neighbor => {
+                    var currentNeig = neighborhoods.get(neighbor);
+                    if (currentNeig === undefined) {
+                        neighborhoods.set(neighbor, 1);
+                    } else {
+                        neighborhoods.set(neighbor, currentNeig + 1);
+                    }
+                });
+            }
+        }
+        addMarkerToTheMap(binding);
+    });
+    map.addLayer(markers);
+    categories = new Map([...categories].sort((a, b) => b[1] - a[1]));
+    neighborhoods = new Map([...neighborhoods].sort((a, b) => b[1] - a[1]));
+    yearInstalled = new Map([...yearInstalled].sort());
+    var previous = null;
+    for (const [key, value] of yearInstalled) {
+        if (previous != null) {
+            var years = previous.split("-");
+            var currentKey = (parseInt(years[1]) + 1) + "-" + (parseInt(years[1]) + 10);
+            var current = yearInstalled.get(currentKey);
+            if (previous != "NA" && current === undefined) {
+                yearInstalled.set(currentKey, 0);
+            }
+        }
+        previous = key;
+    }
+    yearInstalled = new Map([...yearInstalled].sort());
+
+    // generating html for the filters category of art section.
+    categories.forEach((count, currentCategory) => {
+        var id = currentCategory.replace("; ", "-");
+        if (!document.getElementById(id)) {
+            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
+                id + "' name='" + currentCategory + "'" + "checked>" + "<label for = '" + currentCategory + "'> " + currentCategory + " (" + count + ")" +
+                "</label></div>";
+            document.getElementById("art-category-section").insertAdjacentHTML('beforeend', htmlString);
+            document.getElementById(id).addEventListener('change', (e) => {
+                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods);
+            })
+        }
+    })
+
+    // generating html for the filters neighborhood section.
+    neighborhoods.forEach((count, neighborhood) => {
+        var id = neighborhood.replace("; ", "-");
+        if (!document.getElementById(id)) {
+            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
+                id + "' name='" + neighborhood + "'" + "checked>" + "<label for = '" + neighborhood + "'> " + neighborhood + " (" + count + ")" + "</label></div>";
+            document.getElementById("neighbourhood-category-section").insertAdjacentHTML('beforeend', htmlString);
+            document.getElementById(id).addEventListener('change', (e) => {
+                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods);
+            })
+        }
+    })
+
+    // generating html for the filters year installed section (Decade wise).
+    yearInstalled.forEach((count, year) => {
+        var id = "d" + year;
+        if (!document.getElementById(id)) {
+            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
+                id + "' name='" + year + "'" + "checked>" + "<label for = '" + year + "'> " + year + " (" + count + ")" + "</label></div>";
+            document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
+            document.getElementById(id).addEventListener('change', (e) => {
+                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods);
+            })
+        }
+    })
+
+    document.getElementById('distance-select').addEventListener('change', (e) => {
+        var value = e.target.options[e.target.selectedIndex].value;
+        if (value == "0.25") {
+            zoomLevel = 23;
+        } else if (value == "0.50") {
+            zoomLevel = 17;
+        } else if (value == "0.75") {
+            zoomLevel = 16;
+        } else {
+            zoomLevel = 15;
+        }
+        // geolet.deactivate();
+        geolet.activate();
+    });
+}
+
+/**
+ * Gets the coordinated for the particular biniding.
+ * 
+ * @param {Object} binding - the binding data to get coordinate information.
+ */
+function getCoordinates(binding) {
+    if (binding["coords"]) {
+        wkt.read(binding["coords"]);
+    }
+    return [wkt.components[0].y, wkt.components[0].x];
+}
+
+/**
+ * Filters the markers available on the map.
+ * 
+ * @param {Array} bindings - The bindings data.
+ */
+function filterTheMarkers(bindings, yearInstalled, categories, neighborhoods) {
+    markers.clearLayers();
+    var tickedRanges = [],
+        tickedCategories = [],
+        tickedNeighbourhood = [];
+
+    categories.forEach((count, currentCategory) => {
+        var id = currentCategory.replace("; ", "-");
+        if (document.getElementById(id).checked) {
+            tickedCategories.push(currentCategory);
+        }
+    });
+
+    neighborhoods.forEach((count, neighborhood) => {
+        var id = neighborhood.replace("; ", "-");
+        if (document.getElementById(id).checked) {
+            tickedNeighbourhood.push(neighborhood);
+        }
+    });
+
+    yearInstalled.forEach((count, year) => {
+        var id = "d" + year;
+        if (document.getElementById(id).checked) {
+            tickedRanges.push(year);
+        }
+    });
+
+    // adding markers based on the user selected filters.
+    bindings.forEach(binding => {
+        var currentYear = null,
+            currentCategory = null,
+            currentNeighborhood = null;
+        if (binding["yearInstalled"]) {
+            currentYear = binding["yearInstalled"];
+        }
+        if (binding["categories"]) {
+            currentCategory = binding["categories"];
+        }
+        if (binding["neighborhoods"]) {
+            currentNeighborhood = binding["neighborhoods"];
+        }
+
+        if (checkYearRange(tickedRanges, currentYear) &&
+            checkCategory(tickedCategories, currentCategory) &&
+            checkNeighbourHood(tickedNeighbourhood, currentNeighborhood)) {
+
+            addMarkerToTheMap(binding);
+        }
+    });
+
+}
+
+/***
+ * Checks whether the currentYear is in the range or not.
+ */
+function checkYearRange(tickedRanges, currentYear) {
+    if (currentYear) {
+        for (let i = 0; i < tickedRanges.length; i++) {
+            var yearsRange = tickedRanges[i].split("-");
+            var multipleYears = currentYear.split(" or ");
+            if (multipleYears.length > 1) {
+                for (let j = 0; j < multipleYears.length; j++) {
+                    if (parseInt(yearsRange[0]) <= parseInt(multipleYears[j]) && parseInt(yearsRange[1]) >= parseInt(multipleYears[j])) {
+                        return true;
+                    }
+                }
+            } else {
+                if (parseInt(yearsRange[0]) <= currentYear && parseInt(yearsRange[1]) >= currentYear) {
+                    return true;
+                }
+            }
+        }
+    } else {
+        if (tickedRanges.includes('NA')) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/***
+ * Checks whether currentCategory is in the tickedCategories or not.
+ */
+function checkCategory(tickedCategories, currentCategory) {
+    var categories = currentCategory.split("; ");
+    for (let i = 0; i < tickedCategories.length; i++) {
+        if (categories.includes(tickedCategories[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+/***
+ * Checks whether currenNeighborhood is in the tickedNeighbourhood or not.
+ */
+function checkNeighbourHood(tickedNeighbourhood, currentNeighborhood) {
+    var neighborhoods = currentNeighborhood.split("; ");
+    for (let i = 0; i < tickedNeighbourhood.length; i++) {
+        if (neighborhoods.includes(tickedNeighbourhood[i])) {
+            return true;
+        }
+    }
+    return false;
+}
