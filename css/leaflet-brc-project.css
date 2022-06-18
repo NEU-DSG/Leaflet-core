@@ -144,7 +144,8 @@ body {
 
 #date-facet-section,
 #art-category-section,
-#neighbourhood-category-section {
+#neighbourhood-category-section,
+#material-category-section {
     height: 200px;
     overflow: auto;
 }

@@ -28,7 +28,9 @@ function style(feature) {
 }
 
 // creating boundaries to boston area using geojson.
-L.geoJson(statesData, { style: style }).addTo(map);
+L.geoJson(statesData, {
+    style: style
+}).addTo(map);
 
 // osmUrl = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
 // var osm = L.TileLayer.boundaryCanvas(osmUrl, {
@@ -107,6 +109,27 @@ function addMarkerToTheMap(binding) {
     markers.addLayer(marker);
 }
 
+/***
+ * Custom year ranges as per the count.
+ * 
+ * @param {Number} fromDate - the given date from json.
+ */
+function customYearRange(fromDate) {
+    var yearRange = "";
+    if (fromDate >= 1700 && fromDate <= 1799) {
+        yearRange = "1700-1799";
+    } else if (fromDate >= 1800 && fromDate <= 1899) {
+        yearRange = "1800-1899";
+    } else if (fromDate >= 1900 && fromDate <= 1929) {
+        yearRange = "1900-1929";
+    } else if (fromDate >= 1930 && fromDate <= 1969) {
+        yearRange = "1930-1969";
+    } else if (fromDate >= 1970) {
+        var starDate = fromDate - (fromDate % 10)
+        yearRange = starDate + "-" + (starDate + 9);
+    }
+    return yearRange;
+}
 
 /***
  * Generates markers on the map from the parse json data
@@ -118,7 +141,9 @@ function generateMarkersOnMap(jsonData) {
     var categories = new Map();
     var neighborhoods = new Map();
     var yearInstalled = new Map();
-
+    var materials = new Map();
+    var minYear = Number.MAX_SAFE_INTEGER,
+        maxYear = Number.MIN_SAFE_INTEGER;
 
     // parsing through the json/bindings to add markers to the map and to genarate filters on left side.
     bindings.forEach(binding => {
@@ -126,21 +151,25 @@ function generateMarkersOnMap(jsonData) {
             if (binding["yearInstalled"].includes("or")) {
                 var years = binding["yearInstalled"].split(" or ");
                 years.forEach(year => {
-                    var yearRange = year - (year % 10);
-                    var currentYear = yearInstalled.get(yearRange + "-" + (yearRange + 9));
+                    minYear = Math.min(minYear, parseInt(year));
+                    maxYear = Math.max(maxYear, parseInt(year));
+                    var yearRange = customYearRange(parseInt(year));
+                    var currentYear = yearInstalled.get(yearRange);
                     if (currentYear === undefined) {
-                        yearInstalled.set(yearRange + "-" + (yearRange + 9), 1);
+                        yearInstalled.set(yearRange, 1);
                     } else {
-                        yearInstalled.set(yearRange + "-" + (yearRange + 9), currentYear + 1);
+                        yearInstalled.set(yearRange, currentYear + 1);
                     }
                 });
             } else {
-                var yearRange = binding["yearInstalled"] - (binding["yearInstalled"] % 10);
-                var currentYear = yearInstalled.get(yearRange + "-" + (yearRange + 9));
+                minYear = Math.min(minYear, parseInt(binding["yearInstalled"]));
+                maxYear = Math.max(maxYear, parseInt(binding["yearInstalled"]));
+                var yearRange = customYearRange(parseInt(binding["yearInstalled"]));
+                var currentYear = yearInstalled.get(yearRange);
                 if (currentYear === undefined) {
-                    yearInstalled.set(yearRange + "-" + (yearRange + 9), 1);
+                    yearInstalled.set(yearRange, 1);
                 } else {
-                    yearInstalled.set(yearRange + "-" + (yearRange + 9), currentYear + 1);
+                    yearInstalled.set(yearRange, currentYear + 1);
                 }
             }
         } else {
@@ -191,25 +220,54 @@ function generateMarkersOnMap(jsonData) {
                 });
             }
         }
+        if (binding["materials"]) {
+            if (!binding["materials"].includes(";")) {
+                var currentMaterial = materials.get(binding["materials"]);
+                if (currentMaterial === undefined) {
+                    materials.set(binding["materials"], 1);
+                } else {
+                    materials.set(binding["materials"], currentMaterial + 1);
+                }
+            } else {
+                var multipleMaterials = binding["materials"].split("; ");
+                multipleMaterials.forEach(neighbor => {
+                    var currentMaterial = materials.get(neighbor);
+                    if (currentMaterial === undefined) {
+                        materials.set(neighbor, 1);
+                    } else {
+                        materials.set(neighbor, currentMaterial + 1);
+                    }
+                });
+            }
+        } else {
+            var currentMaterial = materials.get("NA");
+            if (currentMaterial === undefined || currentMaterial == "") {
+                materials.set("NA", 1);
+            } else {
+                materials.set("NA", currentMaterial + 1);
+            }
+        }
         addMarkerToTheMap(binding);
     });
     map.addLayer(markers);
     categories = new Map([...categories].sort((a, b) => b[1] - a[1]));
     neighborhoods = new Map([...neighborhoods].sort((a, b) => b[1] - a[1]));
+    materials = new Map([...materials].sort((a, b) => b[1] - a[1]));
     yearInstalled = new Map([...yearInstalled].sort());
+    var yearInstalledWithZeroCount = new Map([...yearInstalled].sort());
     var previous = null;
     for (const [key, value] of yearInstalled) {
         if (previous != null) {
             var years = previous.split("-");
             var currentKey = (parseInt(years[1]) + 1) + "-" + (parseInt(years[1]) + 10);
             var current = yearInstalled.get(currentKey);
-            if (previous != "NA" && current === undefined) {
-                yearInstalled.set(currentKey, 0);
+            if (previous != "NA" && current === undefined && (maxYear % 10) > parseInt(years[1]) + 1) {
+                yearInstalledWithZeroCount.set(currentKey, 0);
             }
         }
         previous = key;
     }
-    yearInstalled = new Map([...yearInstalled].sort());
+    yearInstalled = new Map([...yearInstalledWithZeroCount].sort());
 
     // generating html for the filters category of art section.
     categories.forEach((count, currentCategory) => {
@@ -220,10 +278,10 @@ function generateMarkersOnMap(jsonData) {
                 "</label></div>";
             document.getElementById("art-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods);
+                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials);
             })
         }
-    })
+    });
 
     // generating html for the filters neighborhood section.
     neighborhoods.forEach((count, neighborhood) => {
@@ -233,7 +291,20 @@ function generateMarkersOnMap(jsonData) {
                 id + "' name='" + neighborhood + "'" + "checked>" + "<label for = '" + neighborhood + "'> " + neighborhood + " (" + count + ")" + "</label></div>";
             document.getElementById("neighbourhood-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods);
+                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials);
+            })
+        }
+    });
+
+    // generating html for the filters materail section.
+    materials.forEach((count, material) => {
+        var id = material.replace("; ", "-");
+        if (!document.getElementById(id)) {
+            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
+                id + "' name='" + material + "'" + "checked>" + "<label for = '" + material + "'> " + material + " (" + count + ")" + "</label></div>";
+            document.getElementById("material-category-section").insertAdjacentHTML('beforeend', htmlString);
+            document.getElementById(id).addEventListener('change', (e) => {
+                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials);
             })
         }
     })
@@ -246,10 +317,10 @@ function generateMarkersOnMap(jsonData) {
                 id + "' name='" + year + "'" + "checked>" + "<label for = '" + year + "'> " + year + " (" + count + ")" + "</label></div>";
             document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods);
+                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials);
             })
         }
-    })
+    });
 
     document.getElementById('distance-select').addEventListener('change', (e) => {
         var value = e.target.options[e.target.selectedIndex].value;
@@ -284,11 +355,12 @@ function getCoordinates(binding) {
  * 
  * @param {Array} bindings - The bindings data.
  */
-function filterTheMarkers(bindings, yearInstalled, categories, neighborhoods) {
+function filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials) {
     markers.clearLayers();
     var tickedRanges = [],
         tickedCategories = [],
-        tickedNeighbourhood = [];
+        tickedNeighbourhood = [],
+        tickedMaterials = [];
 
     categories.forEach((count, currentCategory) => {
         var id = currentCategory.replace("; ", "-");
@@ -304,6 +376,13 @@ function filterTheMarkers(bindings, yearInstalled, categories, neighborhoods) {
         }
     });
 
+    materials.forEach((count, material) => {
+        var id = material.replace("; ", "-");
+        if (document.getElementById(id).checked) {
+            tickedMaterials.push(material);
+        }
+    });
+
     yearInstalled.forEach((count, year) => {
         var id = "d" + year;
         if (document.getElementById(id).checked) {
@@ -315,7 +394,8 @@ function filterTheMarkers(bindings, yearInstalled, categories, neighborhoods) {
     bindings.forEach(binding => {
         var currentYear = null,
             currentCategory = null,
-            currentNeighborhood = null;
+            currentNeighborhood = null,
+            currentMaterial = null;
         if (binding["yearInstalled"]) {
             currentYear = binding["yearInstalled"];
         }
@@ -325,10 +405,14 @@ function filterTheMarkers(bindings, yearInstalled, categories, neighborhoods) {
         if (binding["neighborhoods"]) {
             currentNeighborhood = binding["neighborhoods"];
         }
+        if (binding["materials"]) {
+            currentMaterial = binding["materials"];
+        }
 
         if (checkYearRange(tickedRanges, currentYear) &&
             checkCategory(tickedCategories, currentCategory) &&
-            checkNeighbourHood(tickedNeighbourhood, currentNeighborhood)) {
+            checkNeighbourHood(tickedNeighbourhood, currentNeighborhood) &&
+            checkMaterial(tickedMaterials, currentMaterial)) {
 
             addMarkerToTheMap(binding);
         }
@@ -344,15 +428,17 @@ function checkYearRange(tickedRanges, currentYear) {
         for (let i = 0; i < tickedRanges.length; i++) {
             var yearsRange = tickedRanges[i].split("-");
             var multipleYears = currentYear.split(" or ");
-            if (multipleYears.length > 1) {
-                for (let j = 0; j < multipleYears.length; j++) {
-                    if (parseInt(yearsRange[0]) <= parseInt(multipleYears[j]) && parseInt(yearsRange[1]) >= parseInt(multipleYears[j])) {
+            if (tickedRanges[i] != "NA") {
+                if (multipleYears.length > 1) {
+                    for (let j = 0; j < multipleYears.length; j++) {
+                        if (parseInt(yearsRange[0]) <= parseInt(multipleYears[j]) && parseInt(yearsRange[1]) >= parseInt(multipleYears[j])) {
+                            return true;
+                        }
+                    }
+                } else {
+                    if (parseInt(yearsRange[0]) <= parseInt(currentYear) && parseInt(yearsRange[1]) >= parseInt(currentYear)) {
                         return true;
                     }
-                }
-            } else {
-                if (parseInt(yearsRange[0]) <= currentYear && parseInt(yearsRange[1]) >= currentYear) {
-                    return true;
                 }
             }
         }
@@ -361,6 +447,7 @@ function checkYearRange(tickedRanges, currentYear) {
             return true;
         }
     }
+
     return false;
 }
 
@@ -380,12 +467,31 @@ function checkCategory(tickedCategories, currentCategory) {
 
 
 /***
- * Checks whether currenNeighborhood is in the tickedNeighbourhood or not.
+ * Checks whether currentNeighborhood is in the tickedNeighbourhood or not.
  */
 function checkNeighbourHood(tickedNeighbourhood, currentNeighborhood) {
     var neighborhoods = currentNeighborhood.split("; ");
     for (let i = 0; i < tickedNeighbourhood.length; i++) {
         if (neighborhoods.includes(tickedNeighbourhood[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/***
+ * Checks whether currentMaterial is in the tickedNeighbourhood or not.
+ */
+function checkMaterial(tickedMaterials, currentMaterial) {
+    if (currentMaterial) {
+        var materialsArr = currentMaterial.split("; ");
+        for (let i = 0; i < tickedMaterials.length; i++) {
+            if (materialsArr.includes(tickedMaterials[i])) {
+                return true;
+            }
+        }
+    } else {
+        if (tickedMaterials.includes('NA')) {
             return true;
         }
     }
