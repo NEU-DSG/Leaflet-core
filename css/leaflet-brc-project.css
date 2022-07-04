@@ -279,3 +279,67 @@ ul li i:after {
 #filter-cards ul li input[type=checkbox]:checked~i:after {
     transform: translate(-2px, 0) rotate(-45deg);
 }
+
+
+/***
+  Css code for search box 
+***/
+
+.search-container input[type=text] {
+    padding: 6px;
+    margin-top: 8px;
+    font-size: 15px;
+}
+
+.search-container button {
+    float: right;
+    padding: 8px 10px;
+    margin-top: 8px;
+    margin-right: 16px;
+    background: #ddd;
+    font-size: 15px;
+    border: none;
+    cursor: pointer;
+}
+
+.search-container button:hover {
+    background: #ccc;
+}
+
+.popup-image-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    height: 200px;
+}
+
+.popup-image-section img {
+    flex-shrink: 0;
+    min-width: 20%;
+    min-height: 20%
+}
+
+.leaflet-popup-close-button {
+    color: #000000 !important;
+}
+
+
+/***
+  Css code related to more information styling in popup on map.
+***/
+
+.more-info-span {
+    float: right;
+    text-decoration: none;
+    color: #000000 !important;
+}
+
+.more-info-span:hover {
+    color: #0078A8 !important;
+}
+
+.more-info-section {
+    padding: 10px;
+    list-style: none;
+}
