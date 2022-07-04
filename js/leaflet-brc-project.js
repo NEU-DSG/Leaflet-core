@@ -12,12 +12,12 @@ var map = L.map('map', {
 // Base tile creation and setup (stadia maps is being used here for tile layers).     
 var tiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
     maxZoom: 18,
+    minZoom: 11,
     attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
     id: 'mapbox/streets-v11',
     tileSize: 512,
     zoomOffset: -1
 }).addTo(map);
-
 
 function style(feature) {
     return {
@@ -32,12 +32,6 @@ L.geoJson(statesData, {
     style: style
 }).addTo(map);
 
-// osmUrl = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
-// var osm = L.TileLayer.boundaryCanvas(osmUrl, {
-//     boundary: statesData,
-// }).addTo(map);
-
-
 // geolet is a plugin, which will show the current location marker on the map.
 var geolet = L.geolet({
     position: 'topleft'
@@ -48,9 +42,11 @@ var geolet = L.geolet({
 fetch('./res/data/query.json')
     .then(response => response.json())
     .then(jsonData => {
+        bindings = jsonData;
         generateMarkersOnMap(jsonData);
     });
 
+/** Geo-let event which is called when user click on the locate me. */
 var zoomLevel = 23;
 map.on('geolet_success', function(data) {
     map.setView([data.latlng["lat"], data.latlng["lng"]], zoomLevel);
@@ -71,26 +67,43 @@ var myIcon = L.icon({
     popupAnchor: [0, -35],
 });
 
-
+var bindings = [];
 /***
  *  Creates the html string for the popups in the map.
  * 
  * @param {Object} binding - the binding data for a popup.
  */
 function createPopUpHtmlForBinding(binding) {
-    let popUpHtml = "<div class='location-point-popup'><h1 class='location-point-popup-header'>Location Information:</h1><ul class='popup-list'>";
-    for (let property in binding) {
-        if (binding.hasOwnProperty(property) && property !== "coords") {
-            popUpHtml += "<li class='popup-item'>";
-            if (property === "work" || property === "image") {
-                popUpHtml += "<b>" + property + ":</b> " + "<a href='" + binding[property] + "' target='_blank'>" + binding[property] + "</a>";
-            } else {
-                popUpHtml += "<b>" + property + ":</b> " + (binding[property] ? binding[property] : "NA");
-            }
-            popUpHtml += "</li>";
-        }
+    let popUpHtml = "<div class='location-point-popup'>";
+    if (binding["image"]) {
+        popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "'></div>";
     }
-    popUpHtml += "</div>";
+    popUpHtml += "<h1 class='location-point-popup-header'>Location Information:</h1><ul class='popup-list'></ul>"
+    if (binding["yearInstalled"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>Year: </strong> " + binding["yearInstalled"].replace(" or", ',');
+        popUpHtml += "</li>";
+    }
+    if (binding["creators"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>Artist:</strong> " + binding["creators"].replace(";", ',');
+        popUpHtml += "</li>";
+    }
+    if (binding["materials"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>Material:</strong> " + binding["materials"].replace(";", ',');
+        popUpHtml += "</li>";
+    }
+    if (binding["address"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>Location:</strong> " + binding["address"];
+        popUpHtml += "</li>";
+    }
+    if (binding["work"]) {
+        popUpHtml += "<li class='popup-item more-info-section'>";
+        popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>More information.... <img src='res/images/external-link.svg' width='10' heigth='10'></a></li>"
+    }
+    popUpHtml += '</div>';
     return popUpHtml;
 }
 
@@ -137,7 +150,6 @@ function customYearRange(fromDate) {
  * @param {Object} jsonData - the parsed json data.
  */
 function generateMarkersOnMap(jsonData) {
-    let bindings = jsonData;
     var categories = new Map();
     var neighborhoods = new Map();
     var yearInstalled = new Map();
@@ -145,8 +157,8 @@ function generateMarkersOnMap(jsonData) {
     var minYear = Number.MAX_SAFE_INTEGER,
         maxYear = Number.MIN_SAFE_INTEGER;
 
-    // parsing through the json/bindings to add markers to the map and to genarate filters on left side.
-    bindings.forEach(binding => {
+    // parsing through the json/jsonData to add markers to the map and to genarate filters on left side.
+    jsonData.forEach(binding => {
         if (binding["yearInstalled"]) {
             if (binding["yearInstalled"].includes("or")) {
                 var years = binding["yearInstalled"].split(" or ");
@@ -250,9 +262,9 @@ function generateMarkersOnMap(jsonData) {
         addMarkerToTheMap(binding);
     });
     map.addLayer(markers);
-    categories = new Map([...categories].sort((a, b) => b[1] - a[1]));
-    neighborhoods = new Map([...neighborhoods].sort((a, b) => b[1] - a[1]));
-    materials = new Map([...materials].sort((a, b) => b[1] - a[1]));
+    categories = new Map([...categories].sort((a, b) => String(a[0]).localeCompare(b[0])));
+    neighborhoods = new Map([...neighborhoods].sort((a, b) => String(a[0]).localeCompare(b[0])));
+    materials = new Map([...materials].sort((a, b) => String(a[0]).localeCompare(b[0])));
     yearInstalled = new Map([...yearInstalled].sort());
     var yearInstalledWithZeroCount = new Map([...yearInstalled].sort());
     var previous = null;
@@ -278,7 +290,7 @@ function generateMarkersOnMap(jsonData) {
                 "</label></div>";
             document.getElementById("art-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(jsonData, yearInstalled, categories, neighborhoods, materials);
             })
         }
     });
@@ -291,7 +303,7 @@ function generateMarkersOnMap(jsonData) {
                 id + "' name='" + neighborhood + "'" + "checked>" + "<label for = '" + neighborhood + "'> " + neighborhood + " (" + count + ")" + "</label></div>";
             document.getElementById("neighbourhood-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(jsonData, yearInstalled, categories, neighborhoods, materials);
             })
         }
     });
@@ -304,7 +316,7 @@ function generateMarkersOnMap(jsonData) {
                 id + "' name='" + material + "'" + "checked>" + "<label for = '" + material + "'> " + material + " (" + count + ")" + "</label></div>";
             document.getElementById("material-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(jsonData, yearInstalled, categories, neighborhoods, materials);
             })
         }
     })
@@ -317,7 +329,7 @@ function generateMarkersOnMap(jsonData) {
                 id + "' name='" + year + "'" + "checked>" + "<label for = '" + year + "'> " + year + " (" + count + ")" + "</label></div>";
             document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(jsonData, yearInstalled, categories, neighborhoods, materials);
             })
         }
     });
