@@ -509,3 +509,40 @@ function checkMaterial(tickedMaterials, currentMaterial) {
     }
     return false;
 }
+
+/***
+ * Invokes when the search option is used by the user.
+ */
+function searchForText() {
+    var searchText = document.getElementById("search-box-input").value;
+    var searchedBindings = [];
+    const options = {
+        threshold: 0.1,
+        keys: [
+            "workLabel",
+            "creators",
+            "workDescription",
+            "depicted",
+            "commemorated",
+            "address",
+            "yearInstalled"
+        ]
+    };
+    // Change the pattern
+    const pattern = "";
+    if (searchText && bindings && bindings.length > 0) {
+        const fuse = new Fuse(bindings, options);
+        var result = fuse.search(searchText);
+        result.forEach(binding => {
+            if (binding["item"]) {
+                searchedBindings.push(binding["item"]);
+            }
+        });
+        document.getElementById("date-facet-section").innerHTML = '';
+        document.getElementById("art-category-section").innerHTML = '';
+        document.getElementById("neighbourhood-category-section").innerHTML = '';
+        document.getElementById("material-category-section").innerHTML = '';
+        markers.clearLayers();
+        generateMarkersOnMap(searchedBindings);
+    }
+}
