@@ -159,6 +159,7 @@ function generateMarkersOnMap(jsonData) {
 
     // parsing through the json/jsonData to add markers to the map and to genarate filters on left side.
     jsonData.forEach(binding => {
+        // Year Installed filters parsing and updation.
         if (binding["yearInstalled"]) {
             if (binding["yearInstalled"].includes("or")) {
                 var years = binding["yearInstalled"].split(" or ");
@@ -192,6 +193,7 @@ function generateMarkersOnMap(jsonData) {
                 yearInstalled.set("NA", currentYear + 1);
             }
         }
+        // Categories filters parsing and updation.
         if (binding["categories"]) {
             if (!binding["categories"].includes(";")) {
                 var currentCat = categories.get(binding["categories"]);
@@ -212,6 +214,7 @@ function generateMarkersOnMap(jsonData) {
                 });
             }
         }
+        // Neighborhoods filters parsing and updation.
         if (binding["neighborhoods"]) {
             if (!binding["neighborhoods"].includes(";")) {
                 var currentNeig = neighborhoods.get(binding["neighborhoods"]);
@@ -232,6 +235,7 @@ function generateMarkersOnMap(jsonData) {
                 });
             }
         }
+        // Materials filters parsing and updation.
         if (binding["materials"]) {
             if (!binding["materials"].includes(";")) {
                 var currentMaterial = materials.get(binding["materials"]);
@@ -516,6 +520,7 @@ function checkMaterial(tickedMaterials, currentMaterial) {
 function searchForText() {
     var searchText = document.getElementById("search-box-input").value;
     var searchedBindings = [];
+    // options and keys for the fuse object to search for in the json data.
     const options = {
         threshold: 0.1,
         keys: [
@@ -528,8 +533,7 @@ function searchForText() {
             "yearInstalled"
         ]
     };
-    // Change the pattern
-    const pattern = "";
+    // clear the markers and Update the map pins with the searched text from the user.
     if (searchText && bindings && bindings.length > 0) {
         const fuse = new Fuse(bindings, options);
         var result = fuse.search(searchText);
