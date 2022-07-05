@@ -78,7 +78,12 @@ function createPopUpHtmlForBinding(binding) {
     if (binding["image"]) {
         popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "'></div>";
     }
-    popUpHtml += "<h1 class='location-point-popup-header'>Location Information:</h1><ul class='popup-list'></ul>"
+    popUpHtml += "<h1 class='location-point-popup-header'>";
+    if (binding["workLabel"]) {
+        popUpHtml += binding["workLabel"] + "</h1><ul class='popup-list'></ul>";
+    } else {
+        popUpHtml += "Location Information</h1><ul class='popup-list'></ul>";
+    }
     if (binding["yearInstalled"]) {
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Year: </strong> " + binding["yearInstalled"].replace(" or", ',');
