@@ -214,12 +214,13 @@ ul li i:after {
     padding: 0;
     margin: 0;
     background: #fff;
-    box-shadow: 0 3px 10px -2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 3px 50px -2px rgba(0, 0, 0, 0.1);
     -webkit-tap-highlight-color: transparent;
 }
 
 #filter-cards ul li+li {
     margin-top: 15px;
+    margin-bottom: 15px;
 }
 
 #filter-cards ul li:last-of-type {
