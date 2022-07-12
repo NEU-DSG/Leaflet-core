@@ -473,7 +473,9 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         var neighborHoodeFlag = checkNeighbourHood(tickedNeighbourhood, currentNeighborhood);
         var materialFlag = checkMaterial(tickedMaterials, currentMaterial);
 
-        if (yearRangeFlag && categoryFlag && neighborHoodeFlag && materialFlag) {
+        // Checking whether filter should happen through search or not and updated the 
+        // maps related to each filter facets based on searched criteria.
+        if (searchFlag && yearRangeFlag && categoryFlag && neighborHoodeFlag && materialFlag) {
             if (binding["yearInstalled"]) {
                 if (binding["yearInstalled"].includes("or")) {
                     var years = binding["yearInstalled"].split(" or ");
@@ -572,7 +574,6 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
     if (searchFlag) {
         updateTheCountLabels(yearInstalled, categories, neighborhoods, materials);
     }
-
 }
 
 /***
@@ -655,6 +656,9 @@ function checkMaterial(tickedMaterials, currentMaterial) {
     return false;
 }
 
+/***
+ * Updates the count values of the facets in the filter options to zero.
+ */
 function updateTheCountOfFilter(result, yearInstalled, categories, neighborhoods, materials) {
     yearInstalled.forEach((value, key, map) => map.set(key, 0));
     categories.forEach((value, key, map) => map.set(key, 0));
@@ -662,6 +666,9 @@ function updateTheCountOfFilter(result, yearInstalled, categories, neighborhoods
     materials.forEach((value, key, map) => map.set(key, 0));
 }
 
+/***
+ * Updates the label of facets in the filter options to the new count from the searched result.
+ */
 function updateTheCountLabels(yearInstalled, categories, neighborhoods, materials) {
     categories.forEach((count, currentCategory) => {
         var id = currentCategory.replace("; ", "-");
