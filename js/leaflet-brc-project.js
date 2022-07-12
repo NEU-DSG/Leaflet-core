@@ -468,11 +468,102 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
             currentMaterial = binding["materials"];
         }
 
-        var yearRangeFlag = checkYearRange(tickedRanges, currentYear)
-        var categoryFlag = checkCategory(tickedCategories, currentCategory)
-        var neighborHoodeFlag = checkNeighbourHood(tickedNeighbourhood, currentNeighborhood)
-        var materialFlag = checkMaterial(tickedMaterials, currentMaterial)
+        var yearRangeFlag = checkYearRange(tickedRanges, currentYear);
+        var categoryFlag = checkCategory(tickedCategories, currentCategory);
+        var neighborHoodeFlag = checkNeighbourHood(tickedNeighbourhood, currentNeighborhood);
+        var materialFlag = checkMaterial(tickedMaterials, currentMaterial);
 
+        if (yearRangeFlag && categoryFlag && neighborHoodeFlag && materialFlag) {
+            if (binding["yearInstalled"]) {
+                if (binding["yearInstalled"].includes("or")) {
+                    var years = binding["yearInstalled"].split(" or ");
+                    years.forEach(year => {
+                        var yearRange = customYearRange(parseInt(year));
+                        var currentYear = yearInstalled.get(yearRange);
+                        var id = "d" + yearRange;
+                        if (document.getElementById(id).checked) {
+                            yearInstalled.set(yearRange, currentYear + 1);
+                        }
+                    });
+                } else {
+                    var yearRange = customYearRange(parseInt(binding["yearInstalled"]));
+                    var currentYear = yearInstalled.get(yearRange);
+                    var id = "d" + yearRange;
+                    if (document.getElementById(id).checked) {
+                        yearInstalled.set(yearRange, currentYear + 1);
+                    }
+                }
+            } else {
+                var currentYear = yearInstalled.get("NA");
+                var id = "d" + "NA";
+                if (document.getElementById(id).checked) {
+                    yearInstalled.set("NA", currentYear + 1);
+                }
+            }
+            // Categories filters parsing and updation.
+            if (binding["categories"]) {
+                if (!binding["categories"].includes(";")) {
+                    var currentCat = categories.get(binding["categories"]);
+                    var id = binding["categories"].replace("; ", "-");
+                    if (document.getElementById(id).checked) {
+                        categories.set(binding["categories"], currentCat + 1);
+                    }
+                } else {
+                    var multipleCat = binding["categories"].split("; ");
+                    multipleCat.forEach(cat => {
+                        var currentCat = categories.get(cat);
+                        var id = cat.replace("; ", "-");
+                        if (document.getElementById(id).checked) {
+                            categories.set(cat, currentCat + 1);
+                        }
+                    });
+                }
+            }
+            // Neighborhoods filters parsing and updation.
+            if (binding["neighborhoods"]) {
+                if (!binding["neighborhoods"].includes(";")) {
+                    var currentNeig = neighborhoods.get(binding["neighborhoods"]);
+                    var id = binding["neighborhoods"].replace("; ", "-");
+                    if (document.getElementById(id).checked) {
+                        neighborhoods.set(binding["neighborhoods"], currentNeig + 1);
+                    }
+                } else {
+                    var multipleNeig = binding["neighborhoods"].split("; ");
+                    multipleNeig.forEach(neighbor => {
+                        var currentNeig = neighborhoods.get(neighbor);
+                        var id = neighbor.replace("; ", "-");
+                        if (document.getElementById(id).checked) {
+                            neighborhoods.set(neighbor, currentNeig + 1);
+                        }
+                    });
+                }
+            }
+            // material filters parsing and updation.
+            if (binding["materials"]) {
+                if (!binding["materials"].includes(";")) {
+                    var currentMaterial = materials.get(binding["materials"]);
+                    var id = binding["materials"].replace("; ", "-");
+                    if (document.getElementById(id).checked) {
+                        materials.set(binding["materials"], currentMaterial + 1);
+                    }
+                } else {
+                    var multipleMaterials = binding["materials"].split("; ");
+                    multipleMaterials.forEach(material => {
+                        var currentMaterial = materials.get(material);
+                        var id = material.replace("; ", "-");
+                        if (document.getElementById(id).checked) {
+                            materials.set(material, currentMaterial + 1);
+                        }
+                    });
+                }
+            } else {
+                var currentMaterial = materials.get("NA");
+                var id = "NA";
+                if (document.getElementById(id).checked) {
+                    materials.set("NA", currentMaterial + 1);
+                }
+            }
+        }
 
         if (yearRangeFlag && categoryFlag && neighborHoodeFlag && materialFlag) {
             addMarkerToTheMap(binding);
