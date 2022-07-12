@@ -68,6 +68,7 @@ var myIcon = L.icon({
 });
 
 var bindings = [];
+var searchBindings = [];
 /***
  *  Creates the html string for the popups in the map.
  * 
@@ -251,12 +252,12 @@ function generateMarkersOnMap(jsonData) {
                 }
             } else {
                 var multipleMaterials = binding["materials"].split("; ");
-                multipleMaterials.forEach(neighbor => {
-                    var currentMaterial = materials.get(neighbor);
+                multipleMaterials.forEach(material => {
+                    var currentMaterial = materials.get(material);
                     if (currentMaterial === undefined) {
-                        materials.set(neighbor, 1);
+                        materials.set(material, 1);
                     } else {
-                        materials.set(neighbor, currentMaterial + 1);
+                        materials.set(material, currentMaterial + 1);
                     }
                 });
             }
@@ -295,11 +296,11 @@ function generateMarkersOnMap(jsonData) {
         var id = currentCategory.replace("; ", "-");
         if (!document.getElementById(id)) {
             var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
-                id + "' name='" + currentCategory + "'" + "checked>" + "<label for = '" + currentCategory + "'> " + currentCategory + " (" + count + ")" +
+                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + currentCategory + " (" + count + ")" +
                 "</label></div>";
             document.getElementById("art-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(jsonData, yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
             })
         }
     });
@@ -309,23 +310,23 @@ function generateMarkersOnMap(jsonData) {
         var id = neighborhood.replace("; ", "-");
         if (!document.getElementById(id)) {
             var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
-                id + "' name='" + neighborhood + "'" + "checked>" + "<label for = '" + neighborhood + "'> " + neighborhood + " (" + count + ")" + "</label></div>";
+                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label></div>";
             document.getElementById("neighbourhood-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(jsonData, yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
             })
         }
     });
 
-    // generating html for the filters materail section.
+    // generating html for the filters material section.
     materials.forEach((count, material) => {
         var id = material.replace("; ", "-");
         if (!document.getElementById(id)) {
             var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
-                id + "' name='" + material + "'" + "checked>" + "<label for = '" + material + "'> " + material + " (" + count + ")" + "</label></div>";
+                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + material + " (" + count + ")" + "</label></div>";
             document.getElementById("material-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(jsonData, yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
             })
         }
     })
@@ -335,11 +336,42 @@ function generateMarkersOnMap(jsonData) {
         var id = "d" + year;
         if (!document.getElementById(id)) {
             var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
-                id + "' name='" + year + "'" + "checked>" + "<label for = '" + year + "'> " + year + " (" + count + ")" + "</label></div>";
+                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label></div>";
             document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(jsonData, yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
             })
+        }
+    });
+
+    document.getElementById('filters-search').addEventListener('click', (e) => {
+        var searchText = document.getElementById("search-box-input").value;
+        var searchedBindings = [];
+        // options and keys for the fuse object to search for in the json data.
+        const options = {
+            threshold: 0.1,
+            keys: [
+                "workLabel",
+                "creators",
+                "workDescription",
+                "depicted",
+                "commemorated",
+                "address",
+                "yearInstalled"
+            ]
+        };
+        // clear the markers and Update the map pins with the searched text from the user.
+        if (searchText && bindings && bindings.length > 0) {
+            const fuse = new Fuse(bindings, options);
+            var result = fuse.search(searchText);
+            result.forEach(binding => {
+                if (binding["item"]) {
+                    searchedBindings.push(binding["item"]);
+                }
+            });
+            searchBindings = searchedBindings;
+            updateTheCountOfFilter(searchedBindings, yearInstalled, categories, neighborhoods, materials);
+            filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
         }
     });
 
@@ -376,7 +408,13 @@ function getCoordinates(binding) {
  * 
  * @param {Array} bindings - The bindings data.
  */
-function filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, materials) {
+function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, searchFlag) {
+    var filterBindings = [];
+    if (searchBindings.length > 0) {
+        filterBindings = searchBindings;
+    } else {
+        filterBindings = bindings;
+    }
     markers.clearLayers();
     var tickedRanges = [],
         tickedCategories = [],
@@ -412,7 +450,7 @@ function filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, ma
     });
 
     // adding markers based on the user selected filters.
-    bindings.forEach(binding => {
+    filterBindings.forEach(binding => {
         var currentYear = null,
             currentCategory = null,
             currentNeighborhood = null,
@@ -430,14 +468,19 @@ function filterTheMarkers(bindings, yearInstalled, categories, neighborhoods, ma
             currentMaterial = binding["materials"];
         }
 
-        if (checkYearRange(tickedRanges, currentYear) &&
-            checkCategory(tickedCategories, currentCategory) &&
-            checkNeighbourHood(tickedNeighbourhood, currentNeighborhood) &&
-            checkMaterial(tickedMaterials, currentMaterial)) {
+        var yearRangeFlag = checkYearRange(tickedRanges, currentYear)
+        var categoryFlag = checkCategory(tickedCategories, currentCategory)
+        var neighborHoodeFlag = checkNeighbourHood(tickedNeighbourhood, currentNeighborhood)
+        var materialFlag = checkMaterial(tickedMaterials, currentMaterial)
 
+
+        if (yearRangeFlag && categoryFlag && neighborHoodeFlag && materialFlag) {
             addMarkerToTheMap(binding);
         }
     });
+    if (searchFlag) {
+        updateTheCountLabels(yearInstalled, categories, neighborhoods, materials);
+    }
 
 }
 
@@ -472,29 +515,31 @@ function checkYearRange(tickedRanges, currentYear) {
     return false;
 }
 
-
 /***
  * Checks whether currentCategory is in the tickedCategories or not.
  */
 function checkCategory(tickedCategories, currentCategory) {
-    var categories = currentCategory.split("; ");
-    for (let i = 0; i < tickedCategories.length; i++) {
-        if (categories.includes(tickedCategories[i])) {
-            return true;
+    if (currentCategory) {
+        var categories = currentCategory.split("; ");
+        for (let i = 0; i < tickedCategories.length; i++) {
+            if (categories.includes(tickedCategories[i])) {
+                return true;
+            }
         }
     }
     return false;
 }
 
-
 /***
  * Checks whether currentNeighborhood is in the tickedNeighbourhood or not.
  */
 function checkNeighbourHood(tickedNeighbourhood, currentNeighborhood) {
-    var neighborhoods = currentNeighborhood.split("; ");
-    for (let i = 0; i < tickedNeighbourhood.length; i++) {
-        if (neighborhoods.includes(tickedNeighbourhood[i])) {
-            return true;
+    if (currentNeighborhood) {
+        var neighborhoods = currentNeighborhood.split("; ");
+        for (let i = 0; i < tickedNeighbourhood.length; i++) {
+            if (neighborhoods.includes(tickedNeighbourhood[i])) {
+                return true;
+            }
         }
     }
     return false;
@@ -519,39 +564,38 @@ function checkMaterial(tickedMaterials, currentMaterial) {
     return false;
 }
 
-/***
- * Invokes when the search option is used by the user.
- */
-function searchForText() {
-    var searchText = document.getElementById("search-box-input").value;
-    var searchedBindings = [];
-    // options and keys for the fuse object to search for in the json data.
-    const options = {
-        threshold: 0.1,
-        keys: [
-            "workLabel",
-            "creators",
-            "workDescription",
-            "depicted",
-            "commemorated",
-            "address",
-            "yearInstalled"
-        ]
-    };
-    // clear the markers and Update the map pins with the searched text from the user.
-    if (searchText && bindings && bindings.length > 0) {
-        const fuse = new Fuse(bindings, options);
-        var result = fuse.search(searchText);
-        result.forEach(binding => {
-            if (binding["item"]) {
-                searchedBindings.push(binding["item"]);
-            }
-        });
-        document.getElementById("date-facet-section").innerHTML = '';
-        document.getElementById("art-category-section").innerHTML = '';
-        document.getElementById("neighbourhood-category-section").innerHTML = '';
-        document.getElementById("material-category-section").innerHTML = '';
-        markers.clearLayers();
-        generateMarkersOnMap(searchedBindings);
-    }
+function updateTheCountOfFilter(result, yearInstalled, categories, neighborhoods, materials) {
+    yearInstalled.forEach((value, key, map) => map.set(key, 0));
+    categories.forEach((value, key, map) => map.set(key, 0));
+    neighborhoods.forEach((value, key, map) => map.set(key, 0));
+    materials.forEach((value, key, map) => map.set(key, 0));
+}
+
+function updateTheCountLabels(yearInstalled, categories, neighborhoods, materials) {
+    categories.forEach((count, currentCategory) => {
+        var id = currentCategory.replace("; ", "-");
+        var querySelect = "label[for='" + id + "']";
+        document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + currentCategory + " (" + count + ")" + "</label>";
+    });
+
+    // generating html for the filters neighborhood section.
+    neighborhoods.forEach((count, neighborhood) => {
+        var id = neighborhood.replace("; ", "-");
+        var querySelect = "label[for='" + id + "']";
+        document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label>";
+    });
+
+    // generating html for the filters material section.
+    materials.forEach((count, material) => {
+        var id = material.replace("; ", "-");
+        var querySelect = "label[for='" + id + "']";
+        document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + material + " (" + count + ")" + "</label>";
+    })
+
+    // generating html for the filters year installed section (Decade wise).
+    yearInstalled.forEach((count, year) => {
+        var id = "d" + year;
+        var querySelect = "label[for='" + id + "']";
+        document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label>";
+    });
 }
