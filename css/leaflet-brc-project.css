@@ -51,6 +51,10 @@ body {
     font-size: 10px;
 }
 
+.leaflet-popup-content {
+    max-width: 250px;
+}
+
 .leaflet-container {
     background: white;
     border: 1px solid black;
@@ -308,17 +312,21 @@ ul li i:after {
 }
 
 .popup-image-section {
-    display: flex;
+    /* display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
-    height: 200px;
+    overflow: hidden; */
+    /* max-height: 206px;
+    max-width: 273px; */
+    width: auto;
 }
 
 .popup-image-section img {
     flex-shrink: 0;
     min-width: 20%;
-    min-height: 20%
+    min-height: 20%;
+    max-height: 206px;
+    max-width: 273px;
 }
 
 .leaflet-popup-close-button {
