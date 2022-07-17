@@ -77,7 +77,7 @@ var searchBindings = [];
 function createPopUpHtmlForBinding(binding) {
     let popUpHtml = "<div class='location-point-popup'>";
     if (binding["image"]) {
-        popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "'></div>";
+        popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "' width='250' height='209'></div>";
     }
     popUpHtml += "<h1 class='location-point-popup-header'>";
     if (binding["workLabel"]) {
@@ -291,6 +291,20 @@ function generateMarkersOnMap(jsonData) {
     }
     yearInstalled = new Map([...yearInstalledWithZeroCount].sort());
 
+
+    // generating html for the filters year installed section (Decade wise).
+    yearInstalled.forEach((count, year) => {
+        var id = "d" + year;
+        if (!document.getElementById(id)) {
+            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
+                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label></div>";
+            document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
+            document.getElementById(id).addEventListener('change', (e) => {
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+            })
+        }
+    });
+
     // generating html for the filters category of art section.
     categories.forEach((count, currentCategory) => {
         var id = currentCategory.replace("; ", "-");
@@ -329,21 +343,62 @@ function generateMarkersOnMap(jsonData) {
                 filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
             })
         }
-    })
-
-    // generating html for the filters year installed section (Decade wise).
-    yearInstalled.forEach((count, year) => {
-        var id = "d" + year;
-        if (!document.getElementById(id)) {
-            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
-                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label></div>";
-            document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
-            document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
-            })
-        }
     });
 
+
+    // Select all change event handler for date filter section.
+    document.getElementById('date-selectall').addEventListener('change', (e) => {
+        yearInstalled.forEach((count, year) => {
+            var id = "d" + year;
+            if (document.getElementById('date-selectall').checked) {
+                document.getElementById(id).checked = true;
+            } else {
+                document.getElementById(id).checked = false;
+            }
+        });
+        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+    });
+
+    // Select all change event handler for category filter section.
+    document.getElementById('category-selectall').addEventListener('change', (e) => {
+        categories.forEach((count, currentCategory) => {
+            var id = currentCategory.replace("; ", "-");
+            if (document.getElementById('category-selectall').checked) {
+                document.getElementById(id).checked = true;
+            } else {
+                document.getElementById(id).checked = false;
+            }
+        });
+        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+    });
+
+    // Select all change event handler for neighborhood filter section.
+    document.getElementById('neighborhood-selectall').addEventListener('change', (e) => {
+        neighborhoods.forEach((count, neighborhood) => {
+            var id = neighborhood.replace("; ", "-");
+            if (document.getElementById('neighborhood-selectall').checked) {
+                document.getElementById(id).checked = true;
+            } else {
+                document.getElementById(id).checked = false;
+            }
+        });
+        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+    });
+
+    // Select all change event handler for material filter section.
+    document.getElementById('material-selectall').addEventListener('change', (e) => {
+        materials.forEach((count, material) => {
+            var id = material.replace("; ", "-");
+            if (document.getElementById('material-selectall').checked) {
+                document.getElementById(id).checked = true;
+            } else {
+                document.getElementById(id).checked = false;
+            }
+        });
+        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+    });
+
+    // filter search click event handler.
     document.getElementById('filters-search').addEventListener('click', (e) => {
         var searchText = document.getElementById("search-box-input").value;
         var searchedBindings = [];
