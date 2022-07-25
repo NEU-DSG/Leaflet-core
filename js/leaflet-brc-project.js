@@ -52,7 +52,6 @@ map.on('geolet_success', function(data) {
     map.setView([data.latlng["lat"], data.latlng["lng"]], zoomLevel);
 })
 
-
 // Cluster markers setup (It helps to setup the cluster).
 var markers = L.markerClusterGroup({
     zoomToBoundsOnClick: true
