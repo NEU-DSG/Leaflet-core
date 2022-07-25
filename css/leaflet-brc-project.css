@@ -21,7 +21,7 @@ body {
     border-radius: 10px;
 }
 
- ::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
     background-color: darkgrey;
     outline: 1px solid slategrey;
     border-radius: 10px;
@@ -270,11 +270,13 @@ ul li i:after {
 }
 
 #filter-cards ul li input[type=checkbox]:checked~div {
-    /*margin-top: 0;*/
+    /*margin-top: 0;
+   */
     max-height: 0;
     transition: .3s;
     opacity: 0;
-    /*transform: translate(0, 50%);*/
+    /*transform: translate(0, 50%);
+   */
 }
 
 #filter-cards ul li input[type=checkbox]:checked~i:before {
@@ -286,9 +288,7 @@ ul li i:after {
 }
 
 
-/***
-  Css code for search box 
-***/
+/*** Css code for search box ***/
 
 .search-container input[type=text] {
     padding: 6px;
@@ -315,9 +315,11 @@ ul li i:after {
     /* display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden; */
+    overflow: hidden;
+    */
     /* max-height: 206px;
-    max-width: 273px; */
+    max-width: 273px;
+    */
     width: auto;
 }
 
@@ -334,9 +336,7 @@ ul li i:after {
 }
 
 
-/***
-  Css code related to more information styling in popup on map.
-***/
+/*** Css code related to more information styling in popup on map. ***/
 
 .more-info-span {
     float: right;
