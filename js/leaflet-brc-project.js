@@ -9,15 +9,22 @@ var map = L.map('map', {
     center: [42.361145, -71.057083]
 });
 
+
 // Base tile creation and setup (stadia maps is being used here for tile layers).     
-var tiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
-    maxZoom: 18,
+var tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
     minZoom: 11,
-    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
-    id: 'mapbox/streets-v11',
-    tileSize: 512,
-    zoomOffset: -1
+    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>',
 }).addTo(map);
+
+// var tiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
+//     maxZoom: 18,
+//     minZoom: 11,
+//     attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
+//     id: 'mapbox/streets-v11',
+//     tileSize: 512,
+//     zoomOffset: -1
+// }).addTo(map);
 
 function style(feature) {
     return {
@@ -274,6 +281,9 @@ function generateMarkersOnMap(jsonData) {
     categories = new Map([...categories].sort((a, b) => String(a[0]).localeCompare(b[0])));
     neighborhoods = new Map([...neighborhoods].sort((a, b) => String(a[0]).localeCompare(b[0])));
     materials = new Map([...materials].sort((a, b) => String(a[0]).localeCompare(b[0])));
+    var materialsNaValue = materials.get("NA");
+    materials.delete("NA");
+    materials.set("NA", materialsNaValue);
     yearInstalled = new Map([...yearInstalled].sort());
     var yearInstalledWithZeroCount = new Map([...yearInstalled].sort());
     var previous = null;
