@@ -67,7 +67,7 @@ var markers = L.markerClusterGroup({
 // wkt string literal parser.
 var wkt = new Wkt.Wkt();
 var myIcon = L.icon({
-    iconUrl: '../res/images/marker-icon-blue.png',
+    iconUrl: './res/images/marker-icon-blue.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [0, -35],
