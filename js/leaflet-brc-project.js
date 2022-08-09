@@ -57,8 +57,15 @@ fetch('./res/data/query.json')
 /** Geo-let event which is called when user click on the locate me. */
 var zoomLevel = 23;
 map.on('geolet_success', function(data) {
-    console.log(data);
     map.setView([data.latlng["lat"], data.latlng["lng"]], zoomLevel);
+})
+
+map.on('geolet_error', function(data) {
+    navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+        if (result.state == "denied") {
+            alert("Please enable the access to the location");
+        }
+    });
 })
 
 // Cluster markers setup (It helps to setup the cluster).
