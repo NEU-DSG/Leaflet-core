@@ -41,7 +41,8 @@ L.geoJson(statesData, {
 
 // geolet is a plugin, which will show the current location marker on the map.
 var geolet = L.geolet({
-    position: 'topleft'
+    position: 'topleft',
+    enableHighAccuracy: true
 }).addTo(map);
 
 
@@ -56,6 +57,7 @@ fetch('./res/data/query.json')
 /** Geo-let event which is called when user click on the locate me. */
 var zoomLevel = 23;
 map.on('geolet_success', function(data) {
+    console.log(data);
     map.setView([data.latlng["lat"], data.latlng["lng"]], zoomLevel);
 })
 
@@ -83,7 +85,7 @@ var searchBindings = [];
 function createPopUpHtmlForBinding(binding) {
     let popUpHtml = "<div class='location-point-popup'>";
     if (binding["image"]) {
-        popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "' width='250' height='209'></div>";
+        popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "' width='250'></div>";
     }
     popUpHtml += "<h1 class='location-point-popup-header'>";
     if (binding["workLabel"]) {
