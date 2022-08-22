@@ -352,3 +352,33 @@ ul li i:after {
     padding: 10px;
     list-style: none;
 }
+
+.marker-cluster-small {
+    background-color: #2f83c6 !important;
+    color: white;
+}
+
+.marker-cluster-small div {
+    background-color: #2f83c6 !important;
+    color: white;
+}
+
+.marker-cluster-medium {
+    background-color: #2f83c6 !important;
+    color: white;
+}
+
+.marker-cluster-medium div {
+    background-color: #2f83c6 !important;
+    color: white;
+}
+
+.marker-cluster-large {
+    background-color: #2f83c6 !important;
+    color: white;
+}
+
+.marker-cluster-large div {
+    background-color: #2f83c6 !important;
+    color: white;
+}
