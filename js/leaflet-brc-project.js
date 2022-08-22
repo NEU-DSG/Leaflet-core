@@ -63,12 +63,10 @@ map.on('geolet_success', function(data) {
 })
 
 map.on('geolet_error', function(data) {
-    navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
-        if (result.state == "denied") {
-            alert("Please enable the access to the location");
-        }
-    });
-})
+    if (data && data.raw && data.raw.message) {
+        alert(data.raw.message);
+    }
+});
 
 // Cluster markers setup (It helps to setup the cluster).
 var markers = L.markerClusterGroup({
