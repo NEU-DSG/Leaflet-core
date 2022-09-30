@@ -6,15 +6,20 @@
 //A world Map is created here using leaflet js. 
 var map = L.map('map', {
     zoom: 13,
-    center: [42.361145, -71.057083]
+    center: [42.361145, -71.057083],
+    zoomControl: false
 });
-
 
 // Base tile creation and setup (stadia maps is being used here for tile layers).     
 var tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     minZoom: 11,
     attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>',
+
+}).addTo(map);
+
+L.control.zoom({
+    position: 'topright'
 }).addTo(map);
 
 // var tiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
@@ -41,7 +46,7 @@ L.geoJson(statesData, {
 
 // geolet is a plugin, which will show the current location marker on the map.
 var geolet = L.geolet({
-    position: 'topleft',
+    position: 'topright',
     enableHighAccuracy: true
 }).addTo(map);
 
@@ -769,4 +774,72 @@ function updateTheCountLabels(yearInstalled, categories, neighborhoods, material
         var querySelect = "label[for='" + id + "']";
         document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label>";
     });
+}
+
+// js code related to slide in window pane.
+const menuItems = document.querySelectorAll(".menu-item");
+const sidebar = document.querySelector(".sidebar");
+const buttonClose = document.querySelector(".close-button");
+
+menuItems.forEach((item) => {
+    item.addEventListener("click", (e) => {
+        const target = e.target;
+        if (
+            target.classList.contains("active-item") ||
+            !document.querySelector(".active-sidebar")
+        ) {
+            document.body.classList.toggle("active-sidebar");
+        }
+
+        // show content
+        // showContent(target.dataset.item);
+        // add active class to menu item
+        addRemoveActiveItem(target, "active-item");
+    });
+});
+
+// close sidebar when click on close button
+buttonClose.addEventListener("click", () => {
+    closeSidebar();
+});
+
+// remove active class from menu item and content
+function addRemoveActiveItem(target, className) {
+    const element = document.querySelector(`.${className}`);
+    target.classList.add(className);
+    if (!element) return;
+    element.classList.remove(className);
+}
+
+// show specific content
+function showContent(dataContent) {
+    const idItem = document.querySelector(`#${dataContent}`);
+    addRemoveActiveItem(idItem, "active-content");
+}
+
+// --------------------------------------------------
+// close when click esc
+document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape") {
+        closeSidebar();
+    }
+});
+
+// close sidebar when click outside
+document.addEventListener("click", (e) => {
+    if (!e.target.closest(".sidebar")) {
+        closeSidebar();
+    }
+});
+
+// --------------------------------------------------
+// close sidebar
+
+function closeSidebar() {
+    document.body.classList.remove("active-sidebar");
+    const element = document.querySelector(".active-item");
+    const activeContent = document.querySelector(".active-content");
+    if (!element) return;
+    element.classList.remove("active-item");
+    // activeContent.classList.remove("active-content");
 }
