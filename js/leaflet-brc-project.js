@@ -314,7 +314,6 @@ function generateMarkersOnMap(jsonData) {
     }
     yearInstalled = new Map([...yearInstalledWithZeroCount].sort());
 
-
     // generating html for the filters year installed section (Decade wise).
     yearInstalled.forEach((count, year) => {
         var id = "d" + year;
@@ -323,7 +322,8 @@ function generateMarkersOnMap(jsonData) {
                 id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label></div>";
             document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+                updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
             })
         }
     });
@@ -337,7 +337,8 @@ function generateMarkersOnMap(jsonData) {
                 "</label></div>";
             document.getElementById("art-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+                updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
             })
         }
     });
@@ -350,7 +351,8 @@ function generateMarkersOnMap(jsonData) {
                 id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label></div>";
             document.getElementById("neighbourhood-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+                updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
             })
         }
     });
@@ -363,11 +365,11 @@ function generateMarkersOnMap(jsonData) {
                 id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + material + " (" + count + ")" + "</label></div>";
             document.getElementById("material-category-section").insertAdjacentHTML('beforeend', htmlString);
             document.getElementById(id).addEventListener('change', (e) => {
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+                updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
             })
         }
     });
-
 
     // Select all change event handler for date filter section.
     document.getElementById('date-selectall').addEventListener('change', (e) => {
@@ -379,7 +381,8 @@ function generateMarkersOnMap(jsonData) {
                 document.getElementById(id).checked = false;
             }
         });
-        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+        updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
     // Select all change event handler for category filter section.
@@ -392,7 +395,8 @@ function generateMarkersOnMap(jsonData) {
                 document.getElementById(id).checked = false;
             }
         });
-        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+        updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
     // Select all change event handler for neighborhood filter section.
@@ -405,7 +409,8 @@ function generateMarkersOnMap(jsonData) {
                 document.getElementById(id).checked = false;
             }
         });
-        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+        updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
     // Select all change event handler for material filter section.
@@ -418,7 +423,8 @@ function generateMarkersOnMap(jsonData) {
                 document.getElementById(id).checked = false;
             }
         });
-        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, false);
+        updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+        filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
     // filter search click event handler.
@@ -448,7 +454,7 @@ function generateMarkersOnMap(jsonData) {
                 }
             });
             searchBindings = searchedBindings;
-            updateTheCountOfFilter(searchedBindings, yearInstalled, categories, neighborhoods, materials);
+            updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
             filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
         }
     });
@@ -737,7 +743,7 @@ function checkMaterial(tickedMaterials, currentMaterial) {
 /***
  * Updates the count values of the facets in the filter options to zero.
  */
-function updateTheCountOfFilter(result, yearInstalled, categories, neighborhoods, materials) {
+function updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials) {
     yearInstalled.forEach((value, key, map) => map.set(key, 0));
     categories.forEach((value, key, map) => map.set(key, 0));
     neighborhoods.forEach((value, key, map) => map.set(key, 0));
@@ -827,9 +833,9 @@ document.addEventListener("keydown", function(event) {
 
 // close sidebar when click outside
 document.addEventListener("click", (e) => {
-    if (!e.target.closest(".sidebar")) {
-        closeSidebar();
-    }
+    // if (!e.target.closest(".sidebar")) {
+    //     closeSidebar();
+    // }
 });
 
 // --------------------------------------------------
