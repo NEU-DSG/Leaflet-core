@@ -52,12 +52,90 @@ var geolet = L.geolet({
 
 
 //Fetching the json data to parse, from the file path 'res/data/query.json'.
-fetch('./res/data/query.json')
-    .then(response => response.json())
-    .then(jsonData => {
-        bindings = jsonData;
-        generateMarkersOnMap(jsonData);
-    });
+// fetch('./res/data/query.json')
+//     .then(response => response.json())
+//     .then(jsonData => {
+//         bindings = jsonData;
+//         generateMarkersOnMap(jsonData);
+//     });
+
+
+const sparqlQuery = `select distinct ?work ?workDescription ?workLabel ?coords ?address
+(group_concat(distinct ?workAlias; separator="; ") as ?aliases)
+(sample(?image) AS ?image) 
+(sample(?DRSImageURL) AS ?DRSImageURL)
+(group_concat(distinct (year(?dateInstalled)); separator=" or ") as ?yearInstalled)
+(group_concat(distinct (year(?dateRemoved)); separator=" or ") as ?yearRemoved)
+(group_concat(distinct ?materialLabel; separator="; ") as ?materials)
+(group_concat(distinct ?categoryLabel; separator="; ") as ?categories)
+(group_concat(distinct ?creatorLabel; separator="; ") as ?creators)
+(group_concat(distinct ?neighborhoodLabel; separator="; ") as ?neighborhoods)
+(group_concat(distinct ?depictsLabel; separator="; ") as ?depicted)
+(group_concat(distinct ?commemoratesLabel; separator="; ") as ?commemorated)
+where {
+  hint:Query hint:optimizer "None".
+  # Items tagged as being on the focus list of the Neighborhood Public Art in Boston WikiProject
+  # and with genre public art. Only grab items that have statements for coordinate location, instance of, 
+  # located in administrative territorial entity properties
+  ?work wdt:P5008 wd:Q108040915;
+        wdt:P136 wd:Q557141;
+        wdt:P625 ?coords;
+        wdt:P31 ?category;
+        wdt:P131 ?neighborhood.
+  optional{?work wdt:P571 ?dateInstalled.}
+  optional{?work wdt:P576 ?dateRemoved.}
+  optional{?work wdt:P18 ?image.}
+  optional{?work wdt:P170 ?creator.}
+  optional{?work wdt:P6375 ?address.}
+  optional{?work wdt:P186 ?material.}
+  optional{?work wdt:P180 ?depicts.}
+  optional{?work wdt:P547 ?commemorates.}
+  optional{?work wdt:P6500 ?DRSImageURL.
+          FILTER(regex(str(?DRSImageURL), '^https://repository.library.northeastern.edu/'))}
+  service wikibase:label {bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". 
+                          ?work rdfs:label ?workLabel.
+                          ?work schema:description ?workDescription.
+                          ?work skos:altLabel ?workAlias.
+                          ?category rdfs:label ?categoryLabel.
+                          ?creator rdfs:label ?creatorLabel.
+                          ?material rdfs:label ?materialLabel.
+                          ?neighborhood rdfs:label ?neighborhoodLabel.
+                          ?depicts rdfs:label ?depictsLabel.
+                          ?commemorates rdfs:label ?commemoratesLabel.
+                         }
+ } group by ?work ?workDescription ?workLabel ?coords ?address`
+
+axios.get('https://query.wikidata.org/sparql', {
+    params: {
+      query: sparqlQuery
+    },
+    headers: {"content-type": "application/sparql-results+json;charset=utf-8"}
+  }).then(response => {
+        if(response && response.status == 200) {
+            if(response.data && response["data"]["results"] && response["data"]["results"]["bindings"]) {
+                bindings = reformatThebindings(response["data"]["results"]["bindings"]);
+                generateMarkersOnMap(Object.assign([],bindings));
+            }
+        }
+  });
+
+  /***
+   * Reformats the bindings to the simplified json structure.
+   */
+  function reformatThebindings(newBindings) {
+    var finalBindings = [];
+    for (const binding of newBindings) {
+        var bindingObj = {};
+        for (const [key, objValue] of Object.entries(binding)) {
+            if(objValue["value"] || objValue["value"] === "") {
+                bindingObj[key] = objValue["value"];
+            }
+            finalBindings.push(bindingObj)
+          }
+      }
+      return finalBindings;
+  }
+
 
 /** Geo-let event which is called when user click on the locate me. */
 var zoomLevel = 23;
@@ -96,8 +174,12 @@ var searchBindings = [];
  */
 function createPopUpHtmlForBinding(binding) {
     let popUpHtml = "<div class='location-point-popup'>";
-    if (binding["image"]) {
-        popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "' width='250'></div>";
+    if (binding["DRSImageURL"] || binding["image"]) {
+        if(binding["DRSImageURL"]) {
+            popUpHtml += "<div class='popup-image-section'> <img src='" + binding["DRSImageURL"] + "' width='250'></div>";
+        } else {
+            popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "' width='250'></div>";
+        }
     }
     popUpHtml += "<h1 class='location-point-popup-header'>";
     if (binding["workLabel"]) {
@@ -107,27 +189,56 @@ function createPopUpHtmlForBinding(binding) {
     }
     if (binding["yearInstalled"]) {
         popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Year: </strong> " + binding["yearInstalled"].replace(" or", ',');
+        popUpHtml += "<strong>Year Installed: </strong> " + binding["yearInstalled"].replaceAll(" or", ',');
+        popUpHtml += "</li>";
+    }
+    if (binding["yearRemoved"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>Year Removed: </strong> " + binding["yearRemoved"].replaceAll(" or", ',');
         popUpHtml += "</li>";
     }
     if (binding["creators"]) {
         popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Artist:</strong> " + binding["creators"].replace(";", ',');
+        popUpHtml += "<strong>Creators:</strong> " + binding["creators"].replaceAll(";", ',');
         popUpHtml += "</li>";
     }
     if (binding["materials"]) {
         popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Material:</strong> " + binding["materials"].replace(";", ',');
+        popUpHtml += "<strong>Materials:</strong> " + binding["materials"].replaceAll(";", ',');
+        popUpHtml += "</li>";
+    }
+    if (binding["categories"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>Categories:</strong> " + binding["categories"].replaceAll(";", ',');
+        popUpHtml += "</li>";
+    }
+    if (binding["neighborhoods"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>Neighborhoods:</strong> " + binding["neighborhoods"].replaceAll(";", ',');
+        popUpHtml += "</li>";
+    }
+    if (binding["depicted"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>Depicted:</strong> " + binding["depicted"].replaceAll(";", ',');
+        popUpHtml += "</li>";
+    }
+    if (binding["commemorated"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>Commemorated:</strong> " + binding["commemorated"].replaceAll(";", ',');
         popUpHtml += "</li>";
     }
     if (binding["address"]) {
         popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Location:</strong> " + binding["address"];
+        popUpHtml += "<strong>Address:</strong> " + binding["address"];
         popUpHtml += "</li>";
     }
     if (binding["work"]) {
         popUpHtml += "<li class='popup-item more-info-section'>";
-        popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>More information.... <img src='res/images/external-link.svg' width='10' heigth='10'></a></li>"
+        popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>"
+    }
+    if (binding["workDescription"]) {
+        popUpHtml += "<li class='popup-item more-info-section'>";
+        popUpHtml += "<a href = '" + binding["workDescription"] + "' class='more-info-span' target='_blank'>More information.... <img src='res/images/external-link.svg' width='10' heigth='10'></a></li>"
     }
     popUpHtml += '</div>';
     return popUpHtml;
