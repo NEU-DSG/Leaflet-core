@@ -232,14 +232,16 @@ function createPopUpHtmlForBinding(binding) {
         popUpHtml += "<strong>Address:</strong> " + binding["address"];
         popUpHtml += "</li>";
     }
+    if (binding["workDescription"]) {
+        popUpHtml += "<li class='popup-item'>";
+        popUpHtml += "<strong>WorkDescription:</strong> " + binding["workDescription"];
+        popUpHtml += "</li>";
+    }
     if (binding["work"]) {
         popUpHtml += "<li class='popup-item more-info-section'>";
-        popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>"
+        popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>More information.... <img src='res/images/external-link.svg' width='10' heigth='10'></a>"
     }
-    if (binding["workDescription"]) {
-        popUpHtml += "<li class='popup-item more-info-section'>";
-        popUpHtml += "<a href = '" + binding["workDescription"] + "' class='more-info-span' target='_blank'>More information.... <img src='res/images/external-link.svg' width='10' heigth='10'></a></li>"
-    }
+   
     popUpHtml += '</div>';
     return popUpHtml;
 }
