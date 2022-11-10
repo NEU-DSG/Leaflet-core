@@ -114,6 +114,7 @@ axios.get('https://query.wikidata.org/sparql', {
         if(response && response.status == 200) {
             if(response.data && response["data"]["results"] && response["data"]["results"]["bindings"]) {
                 bindings = reformatThebindings(response["data"]["results"]["bindings"]);
+                console.log(bindings)
                 generateMarkersOnMap(Object.assign([],bindings));
             }
         }
@@ -130,8 +131,8 @@ axios.get('https://query.wikidata.org/sparql', {
             if(objValue["value"] || objValue["value"] === "") {
                 bindingObj[key] = objValue["value"];
             }
-            finalBindings.push(bindingObj)
           }
+          finalBindings.push(bindingObj)
       }
       return finalBindings;
   }
