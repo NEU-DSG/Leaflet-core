@@ -51,14 +51,6 @@ var geolet = L.geolet({
 }).addTo(map);
 
 
-//Fetching the json data to parse, from the file path 'res/data/query.json'.
-// fetch('./res/data/query.json')
-//     .then(response => response.json())
-//     .then(jsonData => {
-//         bindings = jsonData;
-//         generateMarkersOnMap(jsonData);
-//     });
-
 
 const sparqlQuery = `select distinct ?work ?workDescription ?workLabel ?coords ?address
 (group_concat(distinct ?workAlias; separator="; ") as ?aliases)
@@ -105,38 +97,58 @@ where {
                          }
  } group by ?work ?workDescription ?workLabel ?coords ?address`
 
-axios.get('https://query.wikidata.org/sparql', {
-    params: {
-      query: sparqlQuery
-    },
-    headers: {"content-type": "application/sparql-results+json;charset=utf-8"}
-  }).then(response => {
-        if(response && response.status == 200) {
-            if(response.data && response["data"]["results"] && response["data"]["results"]["bindings"]) {
-                bindings = reformatThebindings(response["data"]["results"]["bindings"]);
-                console.log(bindings)
-                generateMarkersOnMap(Object.assign([],bindings));
-            }
-        }
-  });
+// axios.get('https://query.wikidata.org/sparql', {
+//     params: {
+//       query: sparqlQuery
+//     },
+//     headers: {"content-type": "application/sparql-results+json;charset=utf-8"}
+//   }).then(response => {
+//         if(response && response.status == 200) {
+//             if(response.data && response["data"]["results"] && response["data"]["results"]["bindings"]) {
+//                 bindings = reformatThebindings(response["data"]["results"]["bindings"]);
+//                 console.log(bindings)
+//                 generateMarkersOnMap(Object.assign([],bindings));
+//             }
+//         }
+//   });
 
-  /***
-   * Reformats the bindings to the simplified json structure.
-   */
-  function reformatThebindings(newBindings) {
+// Fetch api request for getting the bindings from the wikidata website.
+url = new URL("https://query.wikidata.org/sparql?format=json&")
+const params = new URLSearchParams();
+params.append('query', sparqlQuery);
+url += params.toString()
+async function fetchBindingsJSON(url) {
+    const response = await fetch(url);
+    const bindingsJson = await response.json();
+    return bindingsJson;
+}
+
+// Then promise after fetching the data from the wikidata website.
+fetchBindingsJSON(url).then(response => {
+    if (response && response["results"] && response["results"]["bindings"]) {
+        bindings = reformatThebindings(response["results"]["bindings"]);
+        generateMarkersOnMap(Object.assign([], bindings));
+    }
+}).catch(err => {
+    console.log("Some error happened with the api", err);
+});
+
+/***
+ * Reformats the bindings to the simplified json structure.
+ */
+function reformatThebindings(newBindings) {
     var finalBindings = [];
     for (const binding of newBindings) {
         var bindingObj = {};
         for (const [key, objValue] of Object.entries(binding)) {
-            if(objValue["value"] || objValue["value"] === "") {
+            if (objValue["value"] || objValue["value"] === "") {
                 bindingObj[key] = objValue["value"];
             }
-          }
-          finalBindings.push(bindingObj)
-      }
-      return finalBindings;
-  }
-
+        }
+        finalBindings.push(bindingObj)
+    }
+    return finalBindings;
+}
 
 /** Geo-let event which is called when user click on the locate me. */
 var zoomLevel = 23;
@@ -176,7 +188,7 @@ var searchBindings = [];
 function createPopUpHtmlForBinding(binding) {
     let popUpHtml = "<div class='location-point-popup'>";
     if (binding["DRSImageURL"] || binding["image"]) {
-        if(binding["DRSImageURL"]) {
+        if (binding["DRSImageURL"]) {
             popUpHtml += "<div class='popup-image-section'> <img src='" + binding["DRSImageURL"] + "' width='250'></div>";
         } else {
             popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "' width='250'></div>";
@@ -242,7 +254,7 @@ function createPopUpHtmlForBinding(binding) {
         popUpHtml += "<li class='popup-item more-info-section'>";
         popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>More information.... <img src='res/images/external-link.svg' width='10' heigth='10'></a>"
     }
-   
+
     popUpHtml += '</div>';
     return popUpHtml;
 }
