@@ -31,6 +31,7 @@ L.control.zoom({
 //     zoomOffset: -1
 // }).addTo(map);
 
+// style object with widht, opacity and fillOpacity used for creating the boundaries of leaflet map.
 function style(feature) {
     return {
         weight: 2,
@@ -44,14 +45,16 @@ L.geoJson(statesData, {
     style: style
 }).addTo(map);
 
-// geolet is a plugin, which will show the current location marker on the map.
+// geolet is a plugin, which will show the current location marker on the map and when clicked on 
+// current location icon it will point out the clients live location.
 var geolet = L.geolet({
     position: 'topright',
     enableHighAccuracy: true
 }).addTo(map);
 
 
-
+// Sparql Query used to get the data from the wikidata site, inorder to fetch the data dynamically
+// this query can be used to get the most updated data, this query is based on the json fields. 
 const sparqlQuery = `select distinct ?work ?workDescription ?workLabel ?coords ?address
 (group_concat(distinct ?workAlias; separator="; ") as ?aliases)
 (sample(?image) AS ?image) 
@@ -114,22 +117,32 @@ where {
 
 // Fetch api request for getting the bindings from the wikidata website.
 url = new URL("https://query.wikidata.org/sparql?format=json&")
+// Addition paramaters like 'query' to apppend the Sparql Query.
 const params = new URLSearchParams();
 params.append('query', sparqlQuery);
+// Apending the query param to the main url.
 url += params.toString()
+// This function is an helper method that is used to call the api of the wikidata.
 async function fetchBindingsJSON(url) {
+    // waiting until we receive the response
     const response = await fetch(url);
+    // converting the format of response to json
     const bindingsJson = await response.json();
+    // retur the json format of binding.
     return bindingsJson;
 }
 
-// Then promise after fetching the data from the wikidata website.
+// Handle the promise for the wikidata api resquest.
 fetchBindingsJSON(url).then(response => {
+    // check weather the response has valid bindings field.
     if (response && response["results"] && response["results"]["bindings"]) {
+        // Take the bindings as a parameter and format the bindings.
         bindings = reformatThebindings(response["results"]["bindings"]);
+        // Finally create markers on the map.
         generateMarkersOnMap(Object.assign([], bindings));
     }
 }).catch(err => {
+    // Error handling in case api failure.
     console.log("Some error happened with the api", err);
 });
 
@@ -138,39 +151,52 @@ fetchBindingsJSON(url).then(response => {
  */
 function reformatThebindings(newBindings) {
     var finalBindings = [];
+    // iterating through all the bindings.
     for (const binding of newBindings) {
         var bindingObj = {};
+        // The bindings has internal fields like yearinstalled, coordinates etc.
         for (const [key, objValue] of Object.entries(binding)) {
             if (objValue["value"] || objValue["value"] === "") {
+                // store the required fields.
                 bindingObj[key] = objValue["value"];
             }
         }
+        // Add the binding object to the final bindings, used to map the markers on leaflet map.
         finalBindings.push(bindingObj)
     }
+    // return the final findings.
     return finalBindings;
 }
 
-/** Geo-let event which is called when user click on the locate me. */
+/** Geo-let success event which is triggered when user click on the locate me button. */
+// intial zoom level.
 var zoomLevel = 23;
 map.on('geolet_success', function(data) {
+    // check for edge cases.
     if (data && data.first == true) {
+        // set the view of the leaflet map, so that all the markers are visible, based on lat and lng.
         map.setView([data.latlng["lat"], data.latlng["lng"]], zoomLevel);
     }
 })
 
+/** Geo-let error event which is triggered when user tries to use locate me but and it throws error. */
 map.on('geolet_error', function(data) {
+     // check for edge cases.
     if (data && data.raw && data.raw.message) {
+        // send an alert message if there is a error while fetching the location of client.
         alert(data.raw.message);
     }
 });
 
-// Cluster markers setup (It helps to setup the cluster).
+// Cluster markers setup, which is used to show the marker in the map in clusters.
 var markers = L.markerClusterGroup({
     zoomToBoundsOnClick: true
 });
 
-// wkt string literal parser.
+// wkt string literal, used for parsing the string literals that is of wkt format.
 var wkt = new Wkt.Wkt();
+
+// Intializing Icon that is used for marking the data in the leaflet map, blue marker. 
 var myIcon = L.icon({
     iconUrl: './res/images/marker-icon-blue.png',
     iconSize: [25, 41],
@@ -178,84 +204,116 @@ var myIcon = L.icon({
     popupAnchor: [0, -35],
 });
 
+// All the bindings intial value.
 var bindings = [];
 var searchBindings = [];
+
 /***
- *  Creates the html string for the popups in the map.
+ *  Creates the html string required for the popups in the map.
  * 
  * @param {Object} binding - the binding data for a popup.
  */
 function createPopUpHtmlForBinding(binding) {
+    // Main div tag for the popup design.
     let popUpHtml = "<div class='location-point-popup'>";
+    // Check if the bindings has DRSImageURL or image url field name.
     if (binding["DRSImageURL"] || binding["image"]) {
+        // if DRSImageURL is available then this image will be shown in the popup.
         if (binding["DRSImageURL"]) {
             popUpHtml += "<div class='popup-image-section'> <img src='" + binding["DRSImageURL"] + "' width='250'></div>";
         } else {
+            // if DRSImageURL is not available then image field is shown.
             popUpHtml += "<div class='popup-image-section'> <img src='" + binding["image"] + "' width='250'></div>";
         }
     }
+    // header label.
     popUpHtml += "<h1 class='location-point-popup-header'>";
     if (binding["workLabel"]) {
+        // append the work label as an heading.
         popUpHtml += binding["workLabel"] + "</h1><ul class='popup-list'></ul>";
     } else {
+         // if there is no label then appending just location information text.
         popUpHtml += "Location Information</h1><ul class='popup-list'></ul>";
     }
+    // check for yearInstalled field name.
     if (binding["yearInstalled"]) {
+        // if year installed is available then add the yearInstalled to the popup html by formating it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Year Installed: </strong> " + binding["yearInstalled"].replaceAll(" or", ',');
         popUpHtml += "</li>";
     }
+     // check for yearRemoved field name.
     if (binding["yearRemoved"]) {
+        // if yearremoved is available then add the yearRemoved to the popup html by formating it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Year Removed: </strong> " + binding["yearRemoved"].replaceAll(" or", ',');
         popUpHtml += "</li>";
     }
+     // check for creators field name.
     if (binding["creators"]) {
+         //if creators are available then add the creators to the popup html by formatting it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Creators:</strong> " + binding["creators"].replaceAll(";", ',');
         popUpHtml += "</li>";
     }
+    // check for materials field name.
     if (binding["materials"]) {
+        // if materials are available then add the materials to the popup html by formatting it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Materials:</strong> " + binding["materials"].replaceAll(";", ',');
         popUpHtml += "</li>";
     }
+    // check for categories field name.
     if (binding["categories"]) {
+        // if categories are available then add the categories to the popup html by formatting it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Categories:</strong> " + binding["categories"].replaceAll(";", ',');
         popUpHtml += "</li>";
     }
+    // check for neighborhoods field name.
     if (binding["neighborhoods"]) {
+        // if neighborhoods are available then add the neighborhoods to the popup html by formatting it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Neighborhoods:</strong> " + binding["neighborhoods"].replaceAll(";", ',');
         popUpHtml += "</li>";
     }
+    // check for depicted field name.
     if (binding["depicted"]) {
+        // if depicted is available then add the depicted to the popup html by formatting it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Depicted:</strong> " + binding["depicted"].replaceAll(";", ',');
         popUpHtml += "</li>";
     }
+    // check for commemorated field name.
     if (binding["commemorated"]) {
+        // if commemorated is available then add the commemorated to the popup html by formatting it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Commemorated:</strong> " + binding["commemorated"].replaceAll(";", ',');
         popUpHtml += "</li>";
     }
+    // check for address field name.
     if (binding["address"]) {
+        // if address is available then add the address to the popup html by formatting it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>Address:</strong> " + binding["address"];
         popUpHtml += "</li>";
     }
+    // check for workDescription field name.
     if (binding["workDescription"]) {
+        // if workDescription is available then add the workDescription to the popup html by formatting it.
         popUpHtml += "<li class='popup-item'>";
         popUpHtml += "<strong>WorkDescription:</strong> " + binding["workDescription"];
         popUpHtml += "</li>";
     }
+    // check for work field name.
     if (binding["work"]) {
+        // if work is available then add the work to the popup html by formatting it.
         popUpHtml += "<li class='popup-item more-info-section'>";
         popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>More information.... <img src='res/images/external-link.svg' width='10' heigth='10'></a>"
     }
 
     popUpHtml += '</div>';
+    // return the final html that is displaid on the popup.
     return popUpHtml;
 }
 
@@ -265,34 +323,44 @@ function createPopUpHtmlForBinding(binding) {
  * @param {Object} binding - the binding to be added to the map.
  */
 function addMarkerToTheMap(binding) {
+    // Crete a new maker using leaflet library, based on the coordinates of the binding.
     var marker = L.marker(getCoordinates(binding), {
         icon: myIcon,
         markerInformation: binding
     });
+    // Get the html for the popup, related to the current binding.
     let popUpHtml = createPopUpHtmlForBinding(binding);
+    // binding the above html to the current marker.
     marker.bindPopup(popUpHtml);
+    // Add the marker to the leaflet map as a layer.
     markers.addLayer(marker);
 }
 
 /***
- * Custom year ranges as per the count.
+ * Custom year ranges based on the date fields in binding json.
  * 
  * @param {Number} fromDate - the given date from json.
  */
 function customYearRange(fromDate) {
     var yearRange = "";
+    // if date range is anywhere in between 1700 to 1799 then merge into one range.
     if (fromDate >= 1700 && fromDate <= 1799) {
         yearRange = "1700-1799";
     } else if (fromDate >= 1800 && fromDate <= 1899) {
+        // if date range is anywhere in between 1800 to 1899 then merge into one range.
         yearRange = "1800-1899";
     } else if (fromDate >= 1900 && fromDate <= 1929) {
+        // if date range is anywhere in between 1900 to 1929 then merge into one range.
         yearRange = "1900-1929";
     } else if (fromDate >= 1930 && fromDate <= 1969) {
+         // if date range is anywhere in between 1930 to 1969 then merge into one range.
         yearRange = "1930-1969";
     } else if (fromDate >= 1970) {
+        // if date is greater than 1970 then divide the years formatting into 10 range.
         var starDate = fromDate - (fromDate % 10)
         yearRange = starDate + "-" + (starDate + 9);
     }
+    // return the final year range.
     return yearRange;
 }
 
@@ -302,6 +370,7 @@ function customYearRange(fromDate) {
  * @param {Object} jsonData - the parsed json data.
  */
 function generateMarkersOnMap(jsonData) {
+    // setting the default variable needed in this method.
     var categories = new Map();
     var neighborhoods = new Map();
     var yearInstalled = new Map();
@@ -309,53 +378,74 @@ function generateMarkersOnMap(jsonData) {
     var minYear = Number.MAX_SAFE_INTEGER,
         maxYear = Number.MIN_SAFE_INTEGER;
 
-    // parsing through the json/jsonData to add markers to the map and to genarate filters on left side.
+    // Looping through the json/jsonData to add markers to the map and to genarate filters on the left side.
     jsonData.forEach(binding => {
         // Year Installed filters parsing and updation.
         if (binding["yearInstalled"]) {
+            // if the yearInstalled field has or in it then we need to split the two years and count them indvidually.
             if (binding["yearInstalled"].includes("or")) {
+                // split the or in year so that we get multiple years.
                 var years = binding["yearInstalled"].split(" or ");
+                // loop through all the available years to calculate the count individually.
                 years.forEach(year => {
+                    // min and max years are stored that can be used while filtering the data.
                     minYear = Math.min(minYear, parseInt(year));
                     maxYear = Math.max(maxYear, parseInt(year));
+                    // Get the year range based on the year.
                     var yearRange = customYearRange(parseInt(year));
                     var currentYear = yearInstalled.get(yearRange);
+                    // check if the current year is valid or ont.
                     if (currentYear === undefined) {
                         yearInstalled.set(yearRange, 1);
                     } else {
+                        // if current year is available then add plus one to it.
                         yearInstalled.set(yearRange, currentYear + 1);
                     }
                 });
-            } else {
+            } 
+            else {
+                // if only one year is available in the binding the store that in yearinstalled.
                 minYear = Math.min(minYear, parseInt(binding["yearInstalled"]));
                 maxYear = Math.max(maxYear, parseInt(binding["yearInstalled"]));
+                // Get the year range based on the year.
                 var yearRange = customYearRange(parseInt(binding["yearInstalled"]));
+                // check if the year is already available, otherwise add the count to 1.
                 var currentYear = yearInstalled.get(yearRange);
                 if (currentYear === undefined) {
                     yearInstalled.set(yearRange, 1);
                 } else {
+                    // if year already present increase the count by 1.
                     yearInstalled.set(yearRange, currentYear + 1);
                 }
             }
         } else {
+            // The case where the year installed in unavailable in the binding.
             var currentYear = yearInstalled.get("NA");
+            // store the NA to the yearinstalled map.
             if (currentYear === undefined) {
                 yearInstalled.set("NA", 1);
             } else {
+                // increment the count.
                 yearInstalled.set("NA", currentYear + 1);
             }
         }
         // Categories filters parsing and updation.
         if (binding["categories"]) {
+            // check if the categories field has semicolon in it.
             if (!binding["categories"].includes(";")) {
+                // if there is only single category. 
                 var currentCat = categories.get(binding["categories"]);
+                // update the categories count map.
                 if (currentCat === undefined) {
                     categories.set(binding["categories"], 1);
                 } else {
+                    // increment the current category count by 1.
                     categories.set(binding["categories"], currentCat + 1);
                 }
             } else {
+                 // if there are multiple categories then split by semicolons to get all categories. 
                 var multipleCat = binding["categories"].split("; ");
+                // iterate through all the categories.
                 multipleCat.forEach(cat => {
                     var currentCat = categories.get(cat);
                     if (currentCat === undefined) {
