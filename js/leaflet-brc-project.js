@@ -458,20 +458,25 @@ function generateMarkersOnMap(jsonData) {
         }
         // Neighborhoods filters parsing and updation.
         if (binding["neighborhoods"]) {
+             // check if the neighborhoods field has semicolon in it.
             if (!binding["neighborhoods"].includes(";")) {
                 var currentNeig = neighborhoods.get(binding["neighborhoods"]);
+                // update the neighborhoods count map.
                 if (currentNeig === undefined) {
                     neighborhoods.set(binding["neighborhoods"], 1);
                 } else {
+                    // increment the current neighborhoods count by 1.
                     neighborhoods.set(binding["neighborhoods"], currentNeig + 1);
                 }
             } else {
                 var multipleNeig = binding["neighborhoods"].split("; ");
                 multipleNeig.forEach(neighbor => {
                     var currentNeig = neighborhoods.get(neighbor);
+                    // update the neighborhoods count map.
                     if (currentNeig === undefined) {
                         neighborhoods.set(neighbor, 1);
                     } else {
+                        // increment the current neighborhoods count by 1.
                         neighborhoods.set(neighbor, currentNeig + 1);
                     }
                 });
@@ -481,23 +486,28 @@ function generateMarkersOnMap(jsonData) {
         if (binding["materials"]) {
             if (!binding["materials"].includes(";")) {
                 var currentMaterial = materials.get(binding["materials"]);
+                // update the materials count map.
                 if (currentMaterial === undefined) {
                     materials.set(binding["materials"], 1);
                 } else {
+                    // increment the current materials count by 1.
                     materials.set(binding["materials"], currentMaterial + 1);
                 }
             } else {
                 var multipleMaterials = binding["materials"].split("; ");
                 multipleMaterials.forEach(material => {
                     var currentMaterial = materials.get(material);
+                    // update the materials count map.
                     if (currentMaterial === undefined) {
                         materials.set(material, 1);
                     } else {
+                        // increment the current materials count by 1.
                         materials.set(material, currentMaterial + 1);
                     }
                 });
             }
         } else {
+            // case where the material is unknown.
             var currentMaterial = materials.get("NA");
             if (currentMaterial === undefined || currentMaterial == "") {
                 materials.set("NA", 1);
@@ -505,39 +515,56 @@ function generateMarkersOnMap(jsonData) {
                 materials.set("NA", currentMaterial + 1);
             }
         }
+        // Add the marker to the map.
         addMarkerToTheMap(binding);
     });
+
+    // add the markers
     map.addLayer(markers);
+    // sort categories
     categories = new Map([...categories].sort((a, b) => String(a[0]).localeCompare(b[0])));
+    // sort neighborhoods
     neighborhoods = new Map([...neighborhoods].sort((a, b) => String(a[0]).localeCompare(b[0])));
+    // sort materials
     materials = new Map([...materials].sort((a, b) => String(a[0]).localeCompare(b[0])));
     var materialsNaValue = materials.get("NA");
     materials.delete("NA");
     materials.set("NA", materialsNaValue);
+    // sort yearInstalled
     yearInstalled = new Map([...yearInstalled].sort());
     var yearInstalledWithZeroCount = new Map([...yearInstalled].sort());
     var previous = null;
+    // iterate through year installed map details and set the range based on the requirements.
     for (const [key, value] of yearInstalled) {
         if (previous != null) {
+            // split the year by hyphen
             var years = previous.split("-");
+            // current key.
             var currentKey = (parseInt(years[1]) + 1) + "-" + (parseInt(years[1]) + 10);
             var current = yearInstalled.get(currentKey);
+            // add zero count years range to the map.
             if (previous != "NA" && current === undefined && (maxYear % 10) > parseInt(years[1]) + 1) {
                 yearInstalledWithZeroCount.set(currentKey, 0);
             }
         }
+        // store previous key 
         previous = key;
     }
+    // sort zero count years.
     yearInstalled = new Map([...yearInstalledWithZeroCount].sort());
 
     // generating html for the filters year installed section (Decade wise).
     yearInstalled.forEach((count, year) => {
         var id = "d" + year;
         if (!document.getElementById(id)) {
+            // html string used to show the items in the year installed section.
             var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
                 id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label></div>";
+            // insert the html string to the div section.
             document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
+            // adding the change event listener to the checkboxes.
             document.getElementById(id).addEventListener('change', (e) => {
+                // when there is a change update the filters data.
                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
                 filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
             })
@@ -548,11 +575,15 @@ function generateMarkersOnMap(jsonData) {
     categories.forEach((count, currentCategory) => {
         var id = currentCategory.replace("; ", "-");
         if (!document.getElementById(id)) {
+            // html string used to show the items in the categories section.
             var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
                 id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + currentCategory + " (" + count + ")" +
                 "</label></div>";
+            // insert the html string to the div section. 
             document.getElementById("art-category-section").insertAdjacentHTML('beforeend', htmlString);
+            // adding the change event listener to the checkboxes.
             document.getElementById(id).addEventListener('change', (e) => {
+                // when there is a change update the filters data.
                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
                 filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
             })
@@ -563,10 +594,14 @@ function generateMarkersOnMap(jsonData) {
     neighborhoods.forEach((count, neighborhood) => {
         var id = neighborhood.replace("; ", "-");
         if (!document.getElementById(id)) {
+            // html string used to show the items in the neighborhoods section.
             var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
                 id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label></div>";
+            // insert the html string to the div section.
             document.getElementById("neighbourhood-category-section").insertAdjacentHTML('beforeend', htmlString);
+           // adding the change event listener to the checkboxes.
             document.getElementById(id).addEventListener('change', (e) => {
+                // when there is a change update the filters data.
                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
                 filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
             })
@@ -577,10 +612,14 @@ function generateMarkersOnMap(jsonData) {
     materials.forEach((count, material) => {
         var id = material.replace("; ", "-");
         if (!document.getElementById(id)) {
+            // html string used to show the items in the materials section.
             var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
                 id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + material + " (" + count + ")" + "</label></div>";
+            // insert the html string to the div section.
             document.getElementById("material-category-section").insertAdjacentHTML('beforeend', htmlString);
+            // adding the change event listener to the checkboxes.
             document.getElementById(id).addEventListener('change', (e) => {
+                // when there is a change update the filters data.
                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
                 filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
             })
@@ -589,62 +628,79 @@ function generateMarkersOnMap(jsonData) {
 
     // Select all change event handler for date filter section.
     document.getElementById('date-selectall').addEventListener('change', (e) => {
+        // iterate each year range and uncheck all the checkboxes.
         yearInstalled.forEach((count, year) => {
+             // format date.
             var id = "d" + year;
+            // check if select all checkbox is checked or not.
             if (document.getElementById('date-selectall').checked) {
                 document.getElementById(id).checked = true;
             } else {
                 document.getElementById(id).checked = false;
             }
         });
+        // update the count and filters data.
         updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
     // Select all change event handler for category filter section.
     document.getElementById('category-selectall').addEventListener('change', (e) => {
+        // iterate each category and uncheck all the checkboxes.
         categories.forEach((count, currentCategory) => {
+            // format category
             var id = currentCategory.replace("; ", "-");
+            // check if select all checkbox is checked or not.
             if (document.getElementById('category-selectall').checked) {
                 document.getElementById(id).checked = true;
             } else {
                 document.getElementById(id).checked = false;
             }
         });
+         // update the count and filters data.
         updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
     // Select all change event handler for neighborhood filter section.
     document.getElementById('neighborhood-selectall').addEventListener('change', (e) => {
+        // iterate each neighbor and uncheck all the checkboxes.
         neighborhoods.forEach((count, neighborhood) => {
+             // format neighborhood.
             var id = neighborhood.replace("; ", "-");
+            // check if select all checkbox is checked or not.
             if (document.getElementById('neighborhood-selectall').checked) {
                 document.getElementById(id).checked = true;
             } else {
                 document.getElementById(id).checked = false;
             }
         });
+         // update the count and filters data.
         updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
     // Select all change event handler for material filter section.
     document.getElementById('material-selectall').addEventListener('change', (e) => {
+        // iterate each material and uncheck all the checkboxes.
         materials.forEach((count, material) => {
+             // format material
             var id = material.replace("; ", "-");
+             // check if select all checkbox is checked or not.
             if (document.getElementById('material-selectall').checked) {
                 document.getElementById(id).checked = true;
             } else {
                 document.getElementById(id).checked = false;
             }
         });
+         // update the count and filters data.
         updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
     // filter search click event handler.
     document.getElementById('filters-search').addEventListener('click', (e) => {
+        // get searched value.
         var searchText = document.getElementById("search-box-input").value;
         var searchedBindings = [];
         // options and keys for the fuse object to search for in the json data.
@@ -662,19 +718,24 @@ function generateMarkersOnMap(jsonData) {
         };
         // clear the markers and Update the map pins with the searched text from the user.
         if (searchText && bindings && bindings.length > 0) {
+            // fuse is used to search with different options based on the JSON fields.
             const fuse = new Fuse(bindings, options);
+            // seach api to set the cofiguration.
             var result = fuse.search(searchText);
+            // iterate throgh the searched results and get the bindings.
             result.forEach(binding => {
                 if (binding["item"]) {
                     searchedBindings.push(binding["item"]);
                 }
             });
             searchBindings = searchedBindings;
+             // update the count and filters data.
             updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
             filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
         }
     });
 
+    // change event listener for the distance dropdown.
     document.getElementById('distance-select').addEventListener('change', (e) => {
         var value = e.target.options[e.target.selectedIndex].value;
         if (value == "0.25") {
@@ -686,7 +747,7 @@ function generateMarkersOnMap(jsonData) {
         } else {
             zoomLevel = 15;
         }
-        // geolet.deactivate();
+        // geolocate the user base on the above zoom levels.
         geolet.activate();
     });
 }
@@ -697,6 +758,7 @@ function generateMarkersOnMap(jsonData) {
  * @param {Object} binding - the binding data to get coordinate information.
  */
 function getCoordinates(binding) {
+    // wkt read api to read the coordintes of the current binding.
     if (binding["coords"]) {
         wkt.read(binding["coords"]);
     }
@@ -710,17 +772,21 @@ function getCoordinates(binding) {
  */
 function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, searchFlag) {
     var filterBindings = [];
+    // check if the method is called from search or while filtering the data.
     if (searchBindings.length > 0) {
         filterBindings = searchBindings;
     } else {
         filterBindings = bindings;
     }
+    // clear all the markers before filtering the data.
     markers.clearLayers();
+    // intial data.
     var tickedRanges = [],
         tickedCategories = [],
         tickedNeighbourhood = [],
         tickedMaterials = [];
 
+    // iterate through categories and add all the checkboxes that are checked.
     categories.forEach((count, currentCategory) => {
         var id = currentCategory.replace("; ", "-");
         if (document.getElementById(id).checked) {
@@ -728,6 +794,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         }
     });
 
+    // iterate through neighborhoods and add all the checkboxes that are checked.
     neighborhoods.forEach((count, neighborhood) => {
         var id = neighborhood.replace("; ", "-");
         if (document.getElementById(id).checked) {
@@ -735,6 +802,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         }
     });
 
+    // iterate through materials and add all the checkboxes that are checked.
     materials.forEach((count, material) => {
         var id = material.replace("; ", "-");
         if (document.getElementById(id).checked) {
@@ -742,6 +810,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         }
     });
 
+    // iterate through yearInstalled and add all the checkboxes that are checked.
     yearInstalled.forEach((count, year) => {
         var id = "d" + year;
         if (document.getElementById(id).checked) {
@@ -755,6 +824,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
             currentCategory = null,
             currentNeighborhood = null,
             currentMaterial = null;
+        
+        // initial checkings.
         if (binding["yearInstalled"]) {
             currentYear = binding["yearInstalled"];
         }
@@ -767,7 +838,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         if (binding["materials"]) {
             currentMaterial = binding["materials"];
         }
-
+        // intital data.
         var yearRangeFlag = checkYearRange(tickedRanges, currentYear);
         var categoryFlag = checkCategory(tickedCategories, currentCategory);
         var neighborHoodeFlag = checkNeighbourHood(tickedNeighbourhood, currentNeighborhood);
@@ -776,21 +847,29 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         // Checking whether filter should happen through search or not and updated the 
         // maps related to each filter facets based on searched criteria.
         if (searchFlag && yearRangeFlag && categoryFlag && neighborHoodeFlag && materialFlag) {
+            // year installed checks
             if (binding["yearInstalled"]) {
+                // check if the data has multiple values.
                 if (binding["yearInstalled"].includes("or")) {
+                    // get multiple years.
                     var years = binding["yearInstalled"].split(" or ");
+                    // iterate through multiple years and update the filters data.
                     years.forEach(year => {
+                        // format year.
                         var yearRange = customYearRange(parseInt(year));
                         var currentYear = yearInstalled.get(yearRange);
                         var id = "d" + yearRange;
+                        // update the year installed section in left side filters.
                         if (document.getElementById(id).checked) {
                             yearInstalled.set(yearRange, currentYear + 1);
                         }
                     });
                 } else {
+                   // format year.
                     var yearRange = customYearRange(parseInt(binding["yearInstalled"]));
                     var currentYear = yearInstalled.get(yearRange);
                     var id = "d" + yearRange;
+                    // update the year installed section in left side filters.
                     if (document.getElementById(id).checked) {
                         yearInstalled.set(yearRange, currentYear + 1);
                     }
@@ -798,23 +877,30 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
             } else {
                 var currentYear = yearInstalled.get("NA");
                 var id = "d" + "NA";
+                // Unknown data for the year installed.
                 if (document.getElementById(id).checked) {
                     yearInstalled.set("NA", currentYear + 1);
                 }
             }
             // Categories filters parsing and updation.
             if (binding["categories"]) {
+                // check if the data has multiple values.
                 if (!binding["categories"].includes(";")) {
                     var currentCat = categories.get(binding["categories"]);
+                    // format category.
                     var id = binding["categories"].replace("; ", "-");
+                    // update the categories section in left side filters.
                     if (document.getElementById(id).checked) {
                         categories.set(binding["categories"], currentCat + 1);
                     }
                 } else {
+                    // format category.
                     var multipleCat = binding["categories"].split("; ");
+                    // iterate through multiple categories
                     multipleCat.forEach(cat => {
                         var currentCat = categories.get(cat);
                         var id = cat.replace("; ", "-");
+                        // update the categories section in left side filters.
                         if (document.getElementById(id).checked) {
                             categories.set(cat, currentCat + 1);
                         }
@@ -823,17 +909,23 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
             }
             // Neighborhoods filters parsing and updation.
             if (binding["neighborhoods"]) {
+                // check if the data has multiple values.
                 if (!binding["neighborhoods"].includes(";")) {
                     var currentNeig = neighborhoods.get(binding["neighborhoods"]);
+                    // format neighbor.
                     var id = binding["neighborhoods"].replace("; ", "-");
+                    // update the neighborhoods section in left side filters.
                     if (document.getElementById(id).checked) {
                         neighborhoods.set(binding["neighborhoods"], currentNeig + 1);
                     }
                 } else {
                     var multipleNeig = binding["neighborhoods"].split("; ");
+                    // iterate through multiple neighborhoods
                     multipleNeig.forEach(neighbor => {
                         var currentNeig = neighborhoods.get(neighbor);
+                        // format neighbor.
                         var id = neighbor.replace("; ", "-");
+                        // update the neighborhoods section in left side filters.
                         if (document.getElementById(id).checked) {
                             neighborhoods.set(neighbor, currentNeig + 1);
                         }
@@ -844,21 +936,28 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
             if (binding["materials"]) {
                 if (!binding["materials"].includes(";")) {
                     var currentMaterial = materials.get(binding["materials"]);
+                     // format material.
                     var id = binding["materials"].replace("; ", "-");
+                    // update the materials section in left side filters.
                     if (document.getElementById(id).checked) {
                         materials.set(binding["materials"], currentMaterial + 1);
                     }
                 } else {
+                    // format material.
                     var multipleMaterials = binding["materials"].split("; ");
+                    // iterate through multiple materials.
                     multipleMaterials.forEach(material => {
                         var currentMaterial = materials.get(material);
+                        // format material.
                         var id = material.replace("; ", "-");
+                         // update the materials section in left side filters.
                         if (document.getElementById(id).checked) {
                             materials.set(material, currentMaterial + 1);
                         }
                     });
                 }
             } else {
+                // Material data unknown case.
                 var currentMaterial = materials.get("NA");
                 var id = "NA";
                 if (document.getElementById(id).checked) {
@@ -867,10 +966,12 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
             }
         }
 
+        // add markers to the map.
         if (yearRangeFlag && categoryFlag && neighborHoodeFlag && materialFlag) {
             addMarkerToTheMap(binding);
         }
     });
+    // update the counts if the search is active.
     if (searchFlag) {
         updateTheCountLabels(yearInstalled, categories, neighborhoods, materials);
     }
@@ -884,7 +985,9 @@ function checkYearRange(tickedRanges, currentYear) {
         for (let i = 0; i < tickedRanges.length; i++) {
             var yearsRange = tickedRanges[i].split("-");
             var multipleYears = currentYear.split(" or ");
+            // check if the current year is unknown or not.
             if (tickedRanges[i] != "NA") {
+                // if there are multiple years then iterate through them.
                 if (multipleYears.length > 1) {
                     for (let j = 0; j < multipleYears.length; j++) {
                         if (parseInt(yearsRange[0]) <= parseInt(multipleYears[j]) && parseInt(yearsRange[1]) >= parseInt(multipleYears[j])) {
@@ -899,11 +1002,13 @@ function checkYearRange(tickedRanges, currentYear) {
             }
         }
     } else {
+        // if the checked years are unkown also it is still valid.
         if (tickedRanges.includes('NA')) {
             return true;
         }
     }
 
+    // if we cant able to find the year choosen in the map.
     return false;
 }
 
@@ -912,7 +1017,9 @@ function checkYearRange(tickedRanges, currentYear) {
  */
 function checkCategory(tickedCategories, currentCategory) {
     if (currentCategory) {
+        // format category.
         var categories = currentCategory.split("; ");
+        // iterate through checked items in category section and check for its validity.
         for (let i = 0; i < tickedCategories.length; i++) {
             if (categories.includes(tickedCategories[i])) {
                 return true;
@@ -927,7 +1034,9 @@ function checkCategory(tickedCategories, currentCategory) {
  */
 function checkNeighbourHood(tickedNeighbourhood, currentNeighborhood) {
     if (currentNeighborhood) {
+         // format neighborhood.
         var neighborhoods = currentNeighborhood.split("; ");
+        // iterate through checked items in neighborhood section and check for its validity.
         for (let i = 0; i < tickedNeighbourhood.length; i++) {
             if (neighborhoods.includes(tickedNeighbourhood[i])) {
                 return true;
@@ -942,6 +1051,7 @@ function checkNeighbourHood(tickedNeighbourhood, currentNeighborhood) {
  */
 function checkMaterial(tickedMaterials, currentMaterial) {
     if (currentMaterial) {
+         // format material.
         var materialsArr = currentMaterial.split("; ");
         for (let i = 0; i < tickedMaterials.length; i++) {
             if (materialsArr.includes(tickedMaterials[i])) {
@@ -949,6 +1059,7 @@ function checkMaterial(tickedMaterials, currentMaterial) {
             }
         }
     } else {
+        // material data unkown case.
         if (tickedMaterials.includes('NA')) {
             return true;
         }
@@ -960,9 +1071,13 @@ function checkMaterial(tickedMaterials, currentMaterial) {
  * Updates the count values of the facets in the filter options to zero.
  */
 function updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials) {
+    // set the count of all the year data to zero.
     yearInstalled.forEach((value, key, map) => map.set(key, 0));
+    // set the count of all the categories data to zero.
     categories.forEach((value, key, map) => map.set(key, 0));
+    // set the count of all the neighborhood data to zero.
     neighborhoods.forEach((value, key, map) => map.set(key, 0));
+    // set the count of all the material data to zero.
     materials.forEach((value, key, map) => map.set(key, 0));
 }
 
@@ -970,42 +1085,49 @@ function updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materi
  * Updates the label of facets in the filter options to the new count from the searched result.
  */
 function updateTheCountLabels(yearInstalled, categories, neighborhoods, materials) {
+    // iterate through categories and change the html labels to the most updated count 
     categories.forEach((count, currentCategory) => {
         var id = currentCategory.replace("; ", "-");
         var querySelect = "label[for='" + id + "']";
+        // change the inner html.
         document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + currentCategory + " (" + count + ")" + "</label>";
     });
 
-    // generating html for the filters neighborhood section.
+    // iterate through neighborhoods and change the html labels to the most updated count 
     neighborhoods.forEach((count, neighborhood) => {
         var id = neighborhood.replace("; ", "-");
         var querySelect = "label[for='" + id + "']";
+        // change the inner html.
         document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label>";
     });
 
-    // generating html for the filters material section.
+    // iterate through materials and change the html labels to the most updated count 
     materials.forEach((count, material) => {
         var id = material.replace("; ", "-");
         var querySelect = "label[for='" + id + "']";
+        // change the inner html.
         document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + material + " (" + count + ")" + "</label>";
     })
 
-    // generating html for the filters year installed section (Decade wise).
+    // iterate through yearInstalled and change the html labels to the most updated count 
     yearInstalled.forEach((count, year) => {
         var id = "d" + year;
         var querySelect = "label[for='" + id + "']";
+        // change the inner html.
         document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label>";
     });
 }
 
-// js code related to slide in window pane.
+// code related to slide in window panel on left side (left hand filters).
 const menuItems = document.querySelectorAll(".menu-item");
 const sidebar = document.querySelector(".sidebar");
 const buttonClose = document.querySelector(".close-button");
 
+// iterate through all the menu section in left hand filers and add click event listerners.
 menuItems.forEach((item) => {
     item.addEventListener("click", (e) => {
         const target = e.target;
+        // add class name to the menu.
         if (
             target.classList.contains("active-item") ||
             !document.querySelector(".active-sidebar")
@@ -1022,6 +1144,7 @@ menuItems.forEach((item) => {
 
 // close sidebar when click on close button
 buttonClose.addEventListener("click", () => {
+    // close the filter on left hand.
     closeSidebar();
 });
 
@@ -1036,12 +1159,14 @@ function addRemoveActiveItem(target, className) {
 // show specific content
 function showContent(dataContent) {
     const idItem = document.querySelector(`#${dataContent}`);
+    // show the content.
     addRemoveActiveItem(idItem, "active-content");
 }
 
 // --------------------------------------------------
 // close when click esc
 document.addEventListener("keydown", function(event) {
+    // if pressed key is escape then close the side bar.
     if (event.key === "Escape") {
         closeSidebar();
     }
