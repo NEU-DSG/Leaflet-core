@@ -230,6 +230,7 @@ function createPopUpHtmlForBinding(binding) {
     popUpHtml += "<h1 class='location-point-popup-header'>";
     if (binding["workLabel"]) {
         // append the work label as an heading.
+        console.log(binding['workLabel'] + ': line 233');
         popUpHtml += binding["workLabel"] + "</h1><ul class='popup-list'></ul>";
     } else {
          // if there is no label then appending just location information text.
