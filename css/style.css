@@ -118,10 +118,17 @@ h3 {
 }
 
 .description {
-    margin: 20px;
+    margin: 5px;
     text-align: left;
     font-size: 11pt;
-    padding: 20px;
+    padding: 5px;
+}
+
+.address {
+    margin: 5px;
+    text-align: left;
+    font-size: 11pt;
+    padding: 5px;
 }
 
 .inFocus {
@@ -132,6 +139,15 @@ h3 {
 .outFocus {
     opacity: 0.3;
     background-color: white;
+}
+
+.list-style-none {
+    list-style-type: none;
+}
+
+.pbt-20 {
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 @media only screen and (max-device-width: 480px) {
