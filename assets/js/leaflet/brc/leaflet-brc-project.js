@@ -1,3 +1,5 @@
+jQuery(function() {
+
 var map = L.map('map', {
   center: [0, 0],
   zoom: 5,
@@ -297,4 +299,7 @@ function refreshLayer(data, map, coord, zoom) {
 
 $("div#contents").animate({
   scrollTop: 5
+});
+
+
 });
