@@ -1,7 +1,7 @@
 var map = L.map('map', {
   center: [0, 0],
   zoom: 5,
-  scrollWheelZoom: false
+  scrollWheelZoom: true
 });
 
 var lightAll = new L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
@@ -12,7 +12,7 @@ var lightAll = new L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{
 map.attributionControl
   .setPrefix('View <a href="http://github.com/jackdougherty/leaflet-storymap" target="_blank">code on GitHub</a>, created with <a href="http://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>');
 
-fetch('./res/data/map.geojson')
+fetch('./data/map.geojson')
   .then(response => response.json())
   .then(jsonData => {
       generateMarkersOnMap(jsonData);
@@ -127,7 +127,7 @@ function createPopUpHtmlForBinding(binding, imagFlag = true) {
       // if work is available then add the work to the popup html by formatting it.
       if (imagFlag) {
           popUpHtml += "<li class='popup-item more-info-section'>";
-          popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>More information.... <img src='res/images/external-link.svg' width='10' heigth='10'></a>"
+          popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>More information.... <img src='./assets/images/brc/external-link.svg' width='10' heigth='10'></a>"
       }
   }
 
@@ -165,7 +165,7 @@ function generateMarkersOnMap(jsonData) {
   const geoJsonObj = L.geoJSON(jsonData, {
           pointToLayer: function(geoJsonPoint, latlng) {
               var myIcon = L.icon({
-                  iconUrl: './res/images/marker-icon-blue.png',
+                  iconUrl: '/assets/images/brc/marker-icon-blue.png',
                   iconSize: [25, 41],
                   iconAnchor: [12, 41],
                   popupAnchor: [0, -35],
@@ -197,7 +197,7 @@ function generateMarkersOnMap(jsonData) {
                   });
 
                   var image = $('<img>', {
-                      src: './res/images/no-image-available.jpg',
+                      src: '/assets/images/brc/no-image-available.jpg',
                   });
                   if (feature.properties.hasOwnProperty("image") && feature.properties["image"]) {
                       image = $('<img>', {
