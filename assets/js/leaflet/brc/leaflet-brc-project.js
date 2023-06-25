@@ -14,11 +14,152 @@ var tileLayer = new L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/
 map.attributionControl
     .setPrefix('View <a href="http://github.com/jackdougherty/leaflet-storymap" target="_blank">code on GitHub</a>, created with <a href="http://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>');
 
-fetch('./data/leaflet/brc/map.geojson')
-    .then(response => response.json())
-    .then(jsonData => {
-        generateMarkersOnMap(jsonData);
-    });
+
+
+// Sparql Query used to get the data from the wikidata site, inorder to fetch the data dynamically
+// this query can be used to get the most updated data, this query is based on the json fields. 
+const sparqlQuery = `select distinct ?work ?workDescription ?workLabel ?coords ?address
+(group_concat(distinct ?workAlias; separator="; ") as ?aliases)
+(sample(?image) AS ?image) 
+(sample(?DRSImageURL) AS ?DRSImageURL)
+(group_concat(distinct (year(?dateInstalled)); separator=" or ") as ?yearInstalled)
+(group_concat(distinct (year(?dateRemoved)); separator=" or ") as ?yearRemoved)
+(group_concat(distinct ?materialLabel; separator="; ") as ?materials)
+(group_concat(distinct ?categoryLabel; separator="; ") as ?categories)
+(group_concat(distinct ?creatorLabel; separator="; ") as ?creators)
+(group_concat(distinct ?neighborhoodLabel; separator="; ") as ?neighborhoods)
+(group_concat(distinct ?depictsLabel; separator="; ") as ?depicted)
+(group_concat(distinct ?commemoratesLabel; separator="; ") as ?commemorated)
+where {
+    hint:Query hint:optimizer "None".
+    # Items tagged as being on the focus list of the Neighborhood Public Art in Boston WikiProject
+    # and with genre public art. Only grab items that have statements for coordinate location, instance of, 
+    # located in administrative territorial entity properties
+    ?work wdt:P5008 wd:Q108040915;
+        wdt:P136 wd:Q557141;
+        wdt:P625 ?coords;
+        wdt:P31 ?category;
+        wdt:P131 ?neighborhood.
+    optional{?work wdt:P571 ?dateInstalled.}
+    optional{?work wdt:P576 ?dateRemoved.}
+    optional{?work wdt:P18 ?image.}
+    optional{?work wdt:P170 ?creator.}
+    optional{?work wdt:P6375 ?address.}
+    optional{?work wdt:P186 ?material.}
+    optional{?work wdt:P180 ?depicts.}
+    optional{?work wdt:P547 ?commemorates.}
+    optional{?work wdt:P6500 ?DRSImageURL.
+            FILTER(regex(str(?DRSImageURL), '^https://repository.library.northeastern.edu/'))}
+    service wikibase:label {bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". 
+                            ?work rdfs:label ?workLabel.
+                            ?work schema:description ?workDescription.
+                            ?work skos:altLabel ?workAlias.
+                            ?category rdfs:label ?categoryLabel.
+                            ?creator rdfs:label ?creatorLabel.
+                            ?material rdfs:label ?materialLabel.
+                            ?neighborhood rdfs:label ?neighborhoodLabel.
+                            ?depicts rdfs:label ?depictsLabel.
+                            ?commemorates rdfs:label ?commemoratesLabel.
+                            }
+    } group by ?work ?workDescription ?workLabel ?coords ?address`
+
+// axios.get('https://query.wikidata.org/sparql', {
+//     params: {
+//       query: sparqlQuery
+//     },
+//     headers: {"content-type": "application/sparql-results+json;charset=utf-8"}
+//   }).then(response => {
+//         if(response && response.status == 200) {
+//             if(response.data && response["data"]["results"] && response["data"]["results"]["bindings"]) {
+//                 bindings = reformatThebindings(response["data"]["results"]["bindings"]);
+//                 console.log(bindings)
+//                 generateMarkersOnMap(Object.assign([],bindings));
+//             }
+//         }
+//   });
+
+// Fetch api request for getting the bindings from the wikidata website.
+url = new URL("https://query.wikidata.org/sparql?format=json&")
+// Addition paramaters like 'query' to apppend the Sparql Query.
+const params = new URLSearchParams();
+params.append('query', sparqlQuery);
+// Apending the query param to the main url.
+url += params.toString()
+// This function is an helper method that is used to call the api of the wikidata.
+async function fetchBindingsJSON(url) {
+    // waiting until we receive the response
+    const response = await fetch(url);
+    // converting the format of response to json
+    const bindingsJson = await response.json();
+    // retur the json format of binding.
+    return bindingsJson;
+}
+
+// Handle the promise for the wikidata api resquest.
+fetchBindingsJSON(url).then(response => {
+    // check weather the response has valid bindings field.
+    if (response && response["results"] && response["results"]["bindings"]) {
+        // Take the bindings as a parameter and format the bindings.
+        var bindings = reformatThebindings(response["results"]["bindings"]);
+        // convert the bindings to geojson object.
+        var geoJsonData = convertJsontoGeojson(bindings);
+        // Finally create markers on the map.
+        generateMarkersOnMap(geoJsonData);
+    }
+}).catch(err => {
+    // Error handling in case api failure.
+    console.log("Some error happened with the api", err);
+});
+
+/***
+ * Convert the bindings from json to geojson.
+ */
+function convertJsontoGeojson(bindings) {
+    var geojson = {
+        type: "FeatureCollection",
+        features: [],
+        };
+    for (i = 0; i < bindings.length; i++) {
+        var featureObj =  {
+            "type": "Feature",
+            "properties": bindings[i],
+            "geometry": null
+        }
+        geojson.features.push(featureObj);
+    }
+    // iterating through all the bindings.
+    return geojson;
+
+}
+
+/***
+ * Reformats the bindings to the simplified json structure.
+ */
+function reformatThebindings(newBindings) {
+    var finalBindings = [];
+    // iterating through all the bindings.
+    for (const binding of newBindings) {
+        var bindingObj = {};
+        // The bindings has internal fields like yearinstalled, coordinates etc.
+        for (const [key, objValue] of Object.entries(binding)) {
+            if (objValue["value"] || objValue["value"] === "") {
+                // store the required fields.
+                bindingObj[key] = objValue["value"];
+            }
+        }
+        // Add the binding object to the final bindings, used to map the markers on leaflet map.
+        finalBindings.push(bindingObj)
+    }
+    // return the final findings.
+    return finalBindings;
+}
+
+
+// fetch('./data/leaflet/brc/map.geojson')
+//     .then(response => response.json())
+//     .then(jsonData => {
+//         generateMarkersOnMap(jsonData);
+//     });
 /***
  *  Creates the html string required for the popups in the map.
  * 
