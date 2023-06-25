@@ -258,7 +258,7 @@ function createStoryMaps(layer, feature, jsonData) {
         id: 'container' + feature.properties['id'],
         class: 'image-container'
     });
-    var imgHolder = $('<div></div', {
+    var imgHolder = $('<div></div>', {
         class: 'img-holder'
     });
 
