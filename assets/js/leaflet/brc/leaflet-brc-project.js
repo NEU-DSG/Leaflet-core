@@ -6,7 +6,7 @@ var map = L.map('map', {
     scrollWheelZoom: true
 });
 
-var lightAll = new L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+var tileLayer = new L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
 }).addTo(map);
 
@@ -86,6 +86,67 @@ function createPopUpHtmlForBinding(binding, imagFlag = true) {
     return popUpHtml;
 }
 
+function createStoryMaps(layer, feature, jsonData) {
+    var imageContainerMargin = 70; // Margin + padding
+    var currentBox = 0;
+    // This creates the contents of each chapter from the GeoJSON data. Unwanted items can be removed, and new ones can be added
+    var chapter = $('<p></p>', {
+        text: feature.properties['workLabel'],
+        class: 'chapter-header'
+    });
+
+    var image = $('<img>', {
+        src: '/assets/images/leaflet/brc/no-image-available.jpg',
+    });
+    if (feature.properties.hasOwnProperty("image") && feature.properties["image"]) {
+        image = $('<img>', {
+            src: feature.properties["image"],
+        });
+    } else if (feature.properties.hasOwnProperty("DRSImageURL") && feature.properties["DRSImageURL"]) {
+        image = $('<img>', {
+            src: feature.properties["DRSImageURL"],
+        });
+    }
+    var source = $('<a>', {
+        text: feature.properties['work'],
+        href: feature.properties['work'],
+        target: '_blank',
+        class: 'source'
+    });
+    var container = $('<div></div>', {
+        id: 'container' + feature.properties['id'],
+        class: 'image-container'
+    });
+    var imgHolder = $('<div></div', {
+        class: 'img-holder'
+    });
+
+    imgHolder.append(image);
+    let popUpHtml = createPopUpHtmlForBinding(feature["properties"], false);
+    container.append(chapter).append(imgHolder).append(source).append(popUpHtml).append("<div class='pbt-20'></div>");
+    $('#contents').append(container);
+    var i;
+    var areaTop = -300;
+    var areaBottom = 0;
+
+    // Calculating total height of blocks above active
+    for (i = 1; i < feature.properties['id']; i++) {
+        areaTop += $('div#container' + i).height() + imageContainerMargin;
+    }
+    areaBottom = areaTop + $('div#container' + feature.properties['id']).height();
+    $('div#contents').scroll(function() {
+        if ($(this).scrollTop() >= areaTop && $(this).scrollTop() < areaBottom) {
+            if (feature.properties['id'] != currentBox) {
+                currentBox = feature.properties['id'];
+                $('.image-container').removeClass("inFocus").addClass("outFocus");
+                $('div#container' + feature.properties['id']).addClass("inFocus").removeClass("outFocus");
+                // This adds another data layer
+                refreshLayer(jsonData, map, feature.geometry['coordinates'], null);
+            }
+        }
+    });
+}
+
 function generateMarkersOnMap(jsonData) {
     // wicket(Wkt) is a library which can parse
     // the WKTliteral (geometry data) and convert to geoJson information. 
@@ -101,11 +162,7 @@ function generateMarkersOnMap(jsonData) {
             }
         }
     });
-
-    var imageContainerMargin = 70; // Margin + padding
-    var currentBox = 0;
     var scrollPosition = 0;
-
     // This watches for the scrollable container
     $('div#contents').scroll(function() {
         scrollPosition = $(this).scrollTop();
@@ -125,115 +182,16 @@ function generateMarkersOnMap(jsonData) {
                 });
             },
             onEachFeature: function(feature, layer) {
-                // let popUpHtml = "<div class='location-point-popup'><h1 class='location-point-popup-header'>Location Information:</h1><ul class='popup-list'>";
-                // if (feature.hasOwnProperty("properties")) {
-                //     for (var property in feature.properties) {
-                //         if (feature.properties.hasOwnProperty(property)) {
-                //             popUpHtml += "<li class='popup-item'>";
-                //             popUpHtml += "<b>" + property + "</b>: " + feature.properties[property];
-                //             popUpHtml += "</li>";
-                //         }
-                //     }
-                //     popUpHtml += "</div>"
-                // }
                 let popUpHtml = createPopUpHtmlForBinding(feature["properties"]);
                 layer.bindPopup(popUpHtml);
-                (function(layer, properties) {
-
-                    // This creates the contents of each chapter from the GeoJSON data. Unwanted items can be removed, and new ones can be added
-                    var chapter = $('<p></p>', {
-                        text: feature.properties['workLabel'],
-                        class: 'chapter-header'
-                    });
-
-                    var image = $('<img>', {
-                        src: '/assets/images/leaflet/brc/no-image-available.jpg',
-                    });
-                    if (feature.properties.hasOwnProperty("image") && feature.properties["image"]) {
-                        image = $('<img>', {
-                            src: feature.properties["image"],
-                        });
-                    } else if (feature.properties.hasOwnProperty("DRSImageURL") && feature.properties["DRSImageURL"]) {
-                        image = $('<img>', {
-                            src: feature.properties["DRSImageURL"],
-                        });
-                    }
-
-                    var source = $('<a>', {
-                        text: feature.properties['work'],
-                        href: feature.properties['work'],
-                        target: '_blank',
-                        class: 'source'
-                    });
-
-                    var description = $('<p></p>', {
-                        text: 'Description:' + (feature.properties['workDescription'] ? feature.properties['workDescription'] : 'NA'),
-                        class: 'description'
-                    });
-
-                    var address = $('<p></p>', {
-                        text: 'Address:' + (feature.properties['address'] ? feature.properties['address'] : 'NA'),
-                        class: 'address'
-                    });
-
-                    var container = $('<div></div>', {
-                        id: 'container' + feature.properties['id'],
-                        class: 'image-container'
-                    });
-
-                    var imgHolder = $('<div></div', {
-                        class: 'img-holder'
-                    });
-
-                    imgHolder.append(image);
-
-                    let popUpHtml = createPopUpHtmlForBinding(feature["properties"], false);
-                    container.append(chapter).append(imgHolder).append(source).append(popUpHtml).append("<div class='pbt-20'></div>");
-                    $('#contents').append(container);
-
-                    var i;
-                    var areaTop = -300;
-                    var areaBottom = 0;
-
-                    // Calculating total height of blocks above active
-                    for (i = 1; i < feature.properties['id']; i++) {
-                        areaTop += $('div#container' + i).height() + imageContainerMargin;
-                    }
-
-                    areaBottom = areaTop + $('div#container' + feature.properties['id']).height();
-
-                    $('div#contents').scroll(function() {
-                        if ($(this).scrollTop() >= areaTop && $(this).scrollTop() < areaBottom) {
-                            if (feature.properties['id'] != currentBox) {
-                                currentBox = feature.properties['id'];
-
-                                $('.image-container').removeClass("inFocus").addClass("outFocus");
-                                $('div#container' + feature.properties['id']).addClass("inFocus").removeClass("outFocus");
-
-                                // This removes all layers besides the base layer
-                                // map.eachLayer(function(layer) {
-                                //     if (layer != tiles) {
-                                //         map.removeLayer(layer);
-                                //     }
-                                // });
-
-                                // This adds another data layer
-                                refreshLayer(jsonData, map, feature.geometry['coordinates'], null);
-                            }
-                        }
-                    });
-
-                })(layer, feature.properties);
+                createStoryMaps(layer, feature, jsonData);
             }
-
         })
         .addTo(map);
-
     $('#contents').append("<div class='space-at-the-bottom'><a href='#space-at-the-top'><i class='fa fa-chevron-up'></i></br><small>Top</small></a></div>");
-
     map.fitBounds(geoJsonObj.getBounds(), {
         padding: [20, 20]
-    })
+    });
 }
 // This adds data as a new layer to the map
 function refreshLayer(data, map, coord, zoom) {
