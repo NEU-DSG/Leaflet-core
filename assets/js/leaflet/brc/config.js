@@ -1,9 +1,18 @@
 const configMaps = {
-    center: [0, 0],
-    zoom: 5,
-    scrollWheelZoom: true,
+    center: [42.361145, -71.057083],
+    zoom: 13,
+    zoomControl: false,
     titleLayerMap: 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
     titleLayerAttribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+    tileMaxZoom: 19,
+    tileMinZoom: 11,
+    zoomPosition: 'topright',
+    geoJsonWeight: 2,
+    geoJsonOpacity: 1,
+    geoJsonFillOpacity: 0,
+    geoLetPosition: 'topright',
+    enableHighAccuracy: true,
+    zoomLevel : 23,
     bindingKeysObject : {
         "yearInstalled": "Year Installed:",
         "yearRemoved": "Year Removed:",
@@ -24,6 +33,16 @@ const configMaps = {
     boundsPadding: [20, 20],
     setViewZoom: 70,
     animateScrollTop: 5,
+    fuseThreshold: 0.1,
+    fuseKeys: [
+                "workLabel",
+                "creators",
+                "workDescription",
+                "depicted",
+                "commemorated",
+                "address",
+                "yearInstalled"
+            ],
     sparqlQuery : `select distinct ?work ?workDescription ?workLabel ?coords ?address
                     (group_concat(distinct ?workAlias; separator="; ") as ?aliases)
                     (sample(?image) AS ?image) 

@@ -5,51 +5,36 @@
 
 //A world Map is created here using leaflet js. 
 var map = L.map('map', {
-    zoom: 13,
-    center: [42.361145, -71.057083],
-    zoomControl: false
+    zoom: configMaps.zoom,
+    center: configMaps.center,
+    zoomControl: configMaps.zoomControl
 });
 
 // Base tile creation and setup (stadia maps is being used here for tile layers).     
-var tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    minZoom: 11,
-    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>',
-
+var tiles = L.tileLayer(configMaps.titleLayerMap, {
+    maxZoom: configMaps.tileMaxZoom,
+    minZoom: configMaps.tileMinZoom,
+    attribution: configMaps.titleLayerAttribution,
 }).addTo(map);
 
 L.control.zoom({
-    position: 'topright'
+    position: configMaps.zoomPosition
 }).addTo(map);
-
-// var tiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
-//     maxZoom: 18,
-//     minZoom: 11,
-//     attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
-//     id: 'mapbox/streets-v11',
-//     tileSize: 512,
-//     zoomOffset: -1
-// }).addTo(map);
-
-// style object with widht, opacity and fillOpacity used for creating the boundaries of leaflet map.
-function style(feature) {
-    return {
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 0,
-    };
-}
 
 // creating boundaries to boston area using geojson.
 L.geoJson(statesData, {
-    style: style
+    style: {
+        weight: configMaps.geoJsonWeight,
+        opacity: configMaps.geoJsonOpacity,
+        fillOpacity: configMaps.geoJsonFillOpacity,
+    }
 }).addTo(map);
 
 // geolet is a plugin, which will show the current location marker on the map and when clicked on 
 // current location icon it will point out the clients live location.
 var geolet = L.geolet({
-    position: 'topright',
-    enableHighAccuracy: true
+    position: configMaps.geoLetPosition,
+    enableHighAccuracy: configMaps.enableHighAccuracy
 }).addTo(map);
 
 // axios.get('https://query.wikidata.org/sparql', {
@@ -68,7 +53,7 @@ var geolet = L.geolet({
 //   });
 
 // Fetch api request for getting the bindings from the wikidata website.
-url = new URL("https://query.wikidata.org/sparql?format=json&")
+var url = new URL("https://query.wikidata.org/sparql?format=json&")
 // Addition paramaters like 'query' to apppend the Sparql Query.
 const params = new URLSearchParams();
 params.append('query', configMaps.sparqlQuery);
@@ -122,14 +107,13 @@ function reformatThebindings(newBindings) {
 
 /** Geo-let success event which is triggered when user click on the locate me button. */
 // intial zoom level.
-var zoomLevel = 23;
 map.on('geolet_success', function(data) {
     // check for edge cases.
     if (data && data.first == true) {
         // set the view of the leaflet map, so that all the markers are visible, based on lat and lng.
-        map.setView([data.latlng["lat"], data.latlng["lng"]], zoomLevel);
+        map.setView([data.latlng["lat"], data.latlng["lng"]], configMaps.zoomLevel);
     }
-})
+});
 
 /** Geo-let error event which is triggered when user tries to use locate me but and it throws error. */
 map.on('geolet_error', function(data) {
@@ -187,75 +171,18 @@ function createPopUpHtmlForBinding(binding) {
          // if there is no label then appending just location information text.
         popUpHtml += "Location Information</h1><ul class='popup-list'></ul>";
     }
-    // check for yearInstalled field name.
-    if (binding["yearInstalled"]) {
-        // if year installed is available then add the yearInstalled to the popup html by formating it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Year Installed: </strong> " + binding["yearInstalled"].replaceAll(" or", ',');
-        popUpHtml += "</li>";
-    }
-     // check for yearRemoved field name.
-    if (binding["yearRemoved"]) {
-        // if yearremoved is available then add the yearRemoved to the popup html by formating it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Year Removed: </strong> " + binding["yearRemoved"].replaceAll(" or", ',');
-        popUpHtml += "</li>";
-    }
-     // check for creators field name.
-    if (binding["creators"]) {
-         //if creators are available then add the creators to the popup html by formatting it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Creators:</strong> " + binding["creators"].replaceAll(";", ',');
-        popUpHtml += "</li>";
-    }
-    // check for materials field name.
-    if (binding["materials"]) {
-        // if materials are available then add the materials to the popup html by formatting it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Materials:</strong> " + binding["materials"].replaceAll(";", ',');
-        popUpHtml += "</li>";
-    }
-    // check for categories field name.
-    if (binding["categories"]) {
-        // if categories are available then add the categories to the popup html by formatting it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Categories:</strong> " + binding["categories"].replaceAll(";", ',');
-        popUpHtml += "</li>";
-    }
-    // check for neighborhoods field name.
-    if (binding["neighborhoods"]) {
-        // if neighborhoods are available then add the neighborhoods to the popup html by formatting it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Neighborhoods:</strong> " + binding["neighborhoods"].replaceAll(";", ',');
-        popUpHtml += "</li>";
-    }
-    // check for depicted field name.
-    if (binding["depicted"]) {
-        // if depicted is available then add the depicted to the popup html by formatting it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Depicted:</strong> " + binding["depicted"].replaceAll(";", ',');
-        popUpHtml += "</li>";
-    }
-    // check for commemorated field name.
-    if (binding["commemorated"]) {
-        // if commemorated is available then add the commemorated to the popup html by formatting it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Commemorated:</strong> " + binding["commemorated"].replaceAll(";", ',');
-        popUpHtml += "</li>";
-    }
-    // check for address field name.
-    if (binding["address"]) {
-        // if address is available then add the address to the popup html by formatting it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>Address:</strong> " + binding["address"];
-        popUpHtml += "</li>";
-    }
-    // check for workDescription field name.
-    if (binding["workDescription"]) {
-        // if workDescription is available then add the workDescription to the popup html by formatting it.
-        popUpHtml += "<li class='popup-item'>";
-        popUpHtml += "<strong>WorkDescription:</strong> " + binding["workDescription"];
-        popUpHtml += "</li>";
+    for (const [key, value] of Object.entries(configMaps.bindingKeysObject)) {
+        if (binding[key]) {
+            if (key == "address" || key == "workDescription") {
+                popUpHtml += "<li class='popup-item'>";
+                popUpHtml += "<strong>" + value + " </strong> " + binding[key];
+                popUpHtml += "</li>";
+            } else {
+                popUpHtml += "<li class='popup-item'>";
+                popUpHtml += "<strong>" + value + " </strong> " + binding[key].replaceAll(";", ',');
+                popUpHtml += "</li>";
+            }
+        }
     }
     // check for work field name.
     if (binding["work"]) {
@@ -657,16 +584,8 @@ function generateMarkersOnMap(jsonData) {
         var searchedBindings = [];
         // options and keys for the fuse object to search for in the json data.
         const options = {
-            threshold: 0.1,
-            keys: [
-                "workLabel",
-                "creators",
-                "workDescription",
-                "depicted",
-                "commemorated",
-                "address",
-                "yearInstalled"
-            ]
+            threshold: configMaps.fuseThreshold,
+            keys: configMaps.fuseKeys
         };
         // clear the markers and Update the map pins with the searched text from the user.
         if (searchText && bindings && bindings.length > 0) {
