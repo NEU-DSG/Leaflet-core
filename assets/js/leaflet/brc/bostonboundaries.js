@@ -1,4 +1,4 @@
-var statesData = {
+const statesData = {
     "type": "FeatureCollection",
     "name": "Boston_Neighborhoods",
     "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
