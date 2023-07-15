@@ -125,9 +125,10 @@ map.on('geolet_error', function(data) {
 });
 
 // Cluster markers setup, which is used to show the marker in the map in clusters.
-var markers = L.markerClusterGroup({
+var clusterMarkersGroup = L.markerClusterGroup({
     zoomToBoundsOnClick: true
 });
+
 
 // wkt string literal, used for parsing the string literals that is of wkt format.
 var wkt = new Wkt.Wkt();
@@ -188,7 +189,7 @@ function createPopUpHtmlForBinding(binding) {
     if (binding["work"]) {
         // if work is available then add the work to the popup html by formatting it.
         popUpHtml += "<li class='popup-item more-info-section'>";
-        popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>More information.... <img src='res/images/external-link.svg' width='10' heigth='10'></a>"
+        popUpHtml += "<a href = '" + binding["work"] + "' class='more-info-span' target='_blank'>More information.... <img src='./assets/images/leaflet/brc/external-link.svg' width='10' heigth='10'></a>"
     }
 
     popUpHtml += '</div>';
@@ -212,7 +213,7 @@ function addMarkerToTheMap(binding) {
     // binding the above html to the current marker.
     marker.bindPopup(popUpHtml);
     // Add the marker to the leaflet map as a layer.
-    markers.addLayer(marker);
+    clusterMarkersGroup.addLayer(marker);
 }
 
 /***
@@ -399,7 +400,7 @@ function generateMarkersOnMap(jsonData) {
     });
 
     // add the markers
-    map.addLayer(markers);
+    map.addLayer(clusterMarkersGroup);
     // sort categories
     categories = new Map([...categories].sort((a, b) => String(a[0]).localeCompare(b[0])));
     // sort neighborhoods
@@ -650,7 +651,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         filterBindings = bindings;
     }
     // clear all the markers before filtering the data.
-    markers.clearLayers();
+    clusterMarkersGroup.clearLayers();
     // intial data.
     var tickedRanges = [],
         tickedCategories = [],
