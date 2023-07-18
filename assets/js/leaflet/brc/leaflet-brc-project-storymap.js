@@ -49,6 +49,10 @@ jQuery(function() {
             var bindings = reformatThebindings(response["results"]["bindings"]);
             // convert the bindings to geojson object.
             var geoJsonData = convertJsontoGeojson(bindings);
+
+            // check for filters from the map.
+            geoJsonData = checkforFilters(geoJsonData);
+
             // Finally create markers on the map.
             generateMarkersOnMap(geoJsonData);
         }
@@ -56,7 +60,18 @@ jQuery(function() {
         // Error handling in case api failure.
         console.log("Some error happened with the api", err);
     });
-    
+
+    function checkforFilters(geoJsonData) {
+        if (localStorage.getItem("properties")) {
+            const properties = JSON.parse(localStorage.getItem("properties"));
+            if (properties.hasOwnProperty("filteredData") && properties["filteredData"].length > 0) {
+                const filterDataArr = properties["filteredData"]
+                geoJsonData["features"] = geoJsonData["features"].filter((binding) => {   return filterDataArr.includes(binding["properties"]["work"]); })
+            }
+            localStorage.setItem("properties", JSON.stringify({}))
+        }
+        return geoJsonData;
+    }
     /***
      * Convert the bindings from json to geojson.
      */

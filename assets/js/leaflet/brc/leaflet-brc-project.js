@@ -12,12 +12,17 @@ var map = L.map('map', {
 
 
 map.on('contextmenu',function(e){
+    const location = e.latlng
     var popup = L.popup()
-    .setLatLng(e.latlng)
-    .setContent('<p>Naviage to Story Map for the clicked location:<a href="brc-leaflet-storymap.html">here</a></p>')
+    .setLatLng(location)
+    .setContent('<p>Naviage to Story Map for the clicked location:<a href="#" onclick="redirectToStoryMap(' + location.lat + "," + location.lng + ')"'  + '>here</a></p>')
     .openOn(map);
-    console.log(e)
 });
+
+function redirectToStoryMap(lat, lng) {
+    const properties = {"lat" : lat, "lng": lng};
+    localStorage.setItem('properties', JSON.stringify(properties));    
+}
 // Base tile creation and setup (stadia maps is being used here for tile layers).     
 var tiles = L.tileLayer(configMaps.titleLayerMap, {
     maxZoom: configMaps.tileMaxZoom,
@@ -134,7 +139,23 @@ map.on('geolet_error', function(data) {
 
 // Cluster markers setup, which is used to show the marker in the map in clusters.
 var clusterMarkersGroup = L.markerClusterGroup({
-    zoomToBoundsOnClick: true
+    // zoomToBoundsOnClick: true
+});
+
+function filterDataAndMoveToStoryMap(filteredData) {
+    const properties = {"filteredData" : filteredData}
+    localStorage.setItem('properties', JSON.stringify(properties));
+    window.location.href="./brc-leaflet-storymap.html"; 
+}
+
+clusterMarkersGroup.on('clustercontextmenu', function (a) {
+	// a.layer is actually a cluster
+    const childrens = a.layer.getAllChildMarkers()
+    const filteredData = []
+    for (const element of childrens) {
+        filteredData.push(element["options"]["markerInformation"]["work"]);
+    }
+    filterDataAndMoveToStoryMap(filteredData);
 });
 
 
@@ -220,6 +241,10 @@ function addMarkerToTheMap(binding) {
     let popUpHtml = createPopUpHtmlForBinding(binding);
     // binding the above html to the current marker.
     marker.bindPopup(popUpHtml);
+
+    marker.on('contextmenu', function(event) {
+        filterDataAndMoveToStoryMap([event.target.options.markerInformation["work"]]);
+    });
     // Add the marker to the leaflet map as a layer.
     clusterMarkersGroup.addLayer(marker);
 }
