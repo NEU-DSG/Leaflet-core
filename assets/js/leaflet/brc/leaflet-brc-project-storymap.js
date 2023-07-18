@@ -1,13 +1,26 @@
 jQuery(function() {
+    
+    var cartoDBTile = L.tileLayer(configStoryMap.titleLayerMap, {
+        attribution: configStoryMap.titleLayerAttribution
+    })
+    
+    var openStreetTile = L.tileLayer(configStoryMap.titleLayerOpenStreet, {
+        attribution: configStoryMap.titleLayerOpenStreetAttribution
+    })
+    
     var map = L.map('map', {
         center: configStoryMap.center,
         zoom: configStoryMap.zoom,
-        scrollWheelZoom: configStoryMap.scrollWheelZoom
+        scrollWheelZoom: configStoryMap.scrollWheelZoom,
+        layers: [cartoDBTile,openStreetTile] 
     });
     
-    var tileLayer = new L.tileLayer(configStoryMap.titleLayerMap, {
-        attribution: configStoryMap.titleLayerAttribution
-    }).addTo(map);
+    var baseMaps = {
+        "CartoDBMap": cartoDBTile,
+        "OpenStreetMap": openStreetTile
+    };
+    
+    var layerControl = L.control.layers(baseMaps).addTo(map);
     
     // axios.get('https://query.wikidata.org/sparql', {
     //     params: {

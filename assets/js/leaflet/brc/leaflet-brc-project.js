@@ -1,15 +1,37 @@
+jQuery(function() {
 /**
  * This document leaflet-brc-project.js contains code related to the mapping the point 
  * in for the sample json data which is available in the file path 'res/data/query.json'.
  */
 
 //A world Map is created here using leaflet js. 
+// Base tile creation and setup (stadia maps is being used here for tile layers).     
+var cartoDBTile = L.tileLayer(configMaps.titleLayerMap, {
+    maxZoom: configMaps.tileMaxZoom,
+    minZoom: configMaps.tileMinZoom,
+    attribution: configMaps.titleLayerAttribution,
+});
+
+var openStreetTile = L.tileLayer(configMaps.titleLayerOpenStreetMap, {
+    maxZoom: configMaps.tileMaxZoom,
+    minZoom: configMaps.tileMinZoom,
+    attribution: configMaps.titleLayerOpenStreetAttribution,
+
+});
+
 var map = L.map('map', {
     zoom: configMaps.zoom,
     center: configMaps.center,
-    zoomControl: configMaps.zoomControl
+    zoomControl: configMaps.zoomControl,
+    layers: [cartoDBTile,openStreetTile] 
 });
 
+var baseMaps = {
+    "CartoDBMap": cartoDBTile,
+    "OpenStreetMap": openStreetTile
+};
+
+var layerControl = L.control.layers(baseMaps).addTo(map);
 
 map.on('contextmenu',function(e){
     const location = e.latlng
@@ -23,12 +45,6 @@ function redirectToStoryMap(lat, lng) {
     const properties = {"lat" : lat, "lng": lng};
     localStorage.setItem('properties', JSON.stringify(properties));    
 }
-// Base tile creation and setup (stadia maps is being used here for tile layers).     
-var tiles = L.tileLayer(configMaps.titleLayerMap, {
-    maxZoom: configMaps.tileMaxZoom,
-    minZoom: configMaps.tileMinZoom,
-    attribution: configMaps.titleLayerAttribution,
-}).addTo(map);
 
 L.control.zoom({
     position: configMaps.zoomPosition
@@ -1095,3 +1111,5 @@ function closeSidebar() {
     element.classList.remove("active-item");
     // activeContent.classList.remove("active-content");
 }
+
+});
