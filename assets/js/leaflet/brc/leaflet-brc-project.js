@@ -10,6 +10,14 @@ var map = L.map('map', {
     zoomControl: configMaps.zoomControl
 });
 
+
+map.on('contextmenu',function(e){
+    var popup = L.popup()
+    .setLatLng(e.latlng)
+    .setContent('<p>Naviage to Story Map for the clicked location:<a href="brc-leaflet-storymap.html">here</a></p>')
+    .openOn(map);
+    console.log(e)
+});
 // Base tile creation and setup (stadia maps is being used here for tile layers).     
 var tiles = L.tileLayer(configMaps.titleLayerMap, {
     maxZoom: configMaps.tileMaxZoom,
