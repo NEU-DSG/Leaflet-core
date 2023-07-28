@@ -33,31 +33,20 @@ var baseMaps = {
 
 var layerControl = L.control.layers(baseMaps).addTo(map);
 
-map.on('contextmenu',function(e){
-    const location = e.latlng
-    var popup = L.popup()
-    .setLatLng(location)
-    .setContent('<p>Naviage to Story Map for the clicked location:<a href="#" onclick="redirectToStoryMap(' + location.lat + "," + location.lng + ')"'  + '>here</a></p>')
-    .openOn(map);
-});
-
-function redirectToStoryMap(lat, lng) {
-    const properties = {"lat" : lat, "lng": lng};
-    localStorage.setItem('properties', JSON.stringify(properties));    
-}
-
 L.control.zoom({
     position: configMaps.zoomPosition
 }).addTo(map);
 
 // creating boundaries to boston area using geojson.
-L.geoJson(statesData, {
+const geoJsonLayer = L.geoJson(statesData, {
     style: {
         weight: configMaps.geoJsonWeight,
         opacity: configMaps.geoJsonOpacity,
         fillOpacity: configMaps.geoJsonFillOpacity,
     }
 }).addTo(map);
+
+
 
 // geolet is a plugin, which will show the current location marker on the map and when clicked on 
 // current location icon it will point out the clients live location.
@@ -157,6 +146,49 @@ map.on('geolet_error', function(data) {
 var clusterMarkersGroup = L.markerClusterGroup({
     // zoomToBoundsOnClick: true
 });
+
+function distanceInMiles(lat1, lon1, lat2, lon2) {
+    var R = 3958.8; // Earth's radius in miles
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var distance = R * c;
+    return distance;
+}
+
+function redirectToStoryMap(lat, lng) {
+    const filteredData = []
+    clusterMarkersGroup.eachLayer(function(layer) {
+        var markerLatLng = layer.getLatLng();
+        var distance = distanceInMiles(lat, lng, markerLatLng.lat, markerLatLng.lng);
+        if (distance <= 0.25) {
+          console.log(layer)
+          filteredData.push(layer["options"]["markerInformation"]["work"]);
+        }
+      });
+      filterDataAndMoveToStoryMap(filteredData);
+}
+
+map.on('contextmenu',function(e){
+    const location = e.latlng
+    var paragraphElement = document.createElement("p");
+    paragraphElement.textContent = "Naviage to Story Map (0.25 miles radius):";
+    var anchorTag = document.createElement('a');
+    anchorTag.href = '#';
+    anchorTag.textContent = 'here';
+    anchorTag.onclick = function() {
+        redirectToStoryMap(location.lat, location.lng);
+    };
+    paragraphElement.appendChild(anchorTag);
+    var popup = L.popup()
+    .setLatLng(location)
+    .setContent(paragraphElement)
+    .openOn(map);
+});
+
 
 function filterDataAndMoveToStoryMap(filteredData) {
     const properties = {"filteredData" : filteredData}

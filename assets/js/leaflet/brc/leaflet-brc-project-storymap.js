@@ -77,7 +77,7 @@ jQuery(function() {
     function checkforFilters(geoJsonData) {
         if (localStorage.getItem("properties")) {
             const properties = JSON.parse(localStorage.getItem("properties"));
-            if (properties.hasOwnProperty("filteredData") && properties["filteredData"].length > 0) {
+            if (properties.hasOwnProperty("filteredData")) {
                 const filterDataArr = properties["filteredData"]
                 geoJsonData["features"] = geoJsonData["features"].filter((binding) => {   return filterDataArr.includes(binding["properties"]["work"]); })
             }
