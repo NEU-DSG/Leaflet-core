@@ -1,12 +1,11 @@
 jQuery(function() {
-    
     var cartoDBTile = L.tileLayer(configStoryMap.titleLayerMap, {
         attribution: configStoryMap.titleLayerAttribution
-    })
+    });
     
     var openStreetTile = L.tileLayer(configStoryMap.titleLayerOpenStreet, {
         attribution: configStoryMap.titleLayerOpenStreetAttribution
-    })
+    });
     
     var map = L.map('map', {
         center: configStoryMap.center,
@@ -22,40 +21,8 @@ jQuery(function() {
     
     var layerControl = L.control.layers(baseMaps).addTo(map);
     
-    // axios.get('https://query.wikidata.org/sparql', {
-    //     params: {
-    //       query: sparqlQuery
-    //     },
-    //     headers: {"content-type": "application/sparql-results+json;charset=utf-8"}
-    //   }).then(response => {
-    //         if(response && response.status == 200) {
-    //             if(response.data && response["data"]["results"] && response["data"]["results"]["bindings"]) {
-    //                 bindings = reformatThebindings(response["data"]["results"]["bindings"]);
-    //                 console.log(bindings)
-    //                 generateMarkersOnMap(Object.assign([],bindings));
-    //             }
-    //         }
-    //   });
-    
-    // Fetch api request for getting the bindings from the wikidata website.
-    var url = new URL("https://query.wikidata.org/sparql?format=json&")
-    // Addition paramaters like 'query' to apppend the Sparql Query.
-    const params = new URLSearchParams();
-    params.append('query', configStoryMap.sparqlQuery);
-    // Apending the query param to the main url.
-    url += params.toString()
-    // This function is an helper method that is used to call the api of the wikidata.
-    async function fetchBindingsJSON(url) {
-        // waiting until we receive the response
-        const response = await fetch(url);
-        // converting the format of response to json
-        const bindingsJson = await response.json();
-        // retur the json format of binding.
-        return bindingsJson;
-    }
-    
     // Handle the promise for the wikidata api resquest.
-    fetchBindingsJSON(url).then(response => {
+    invokeGetBindingsApi().then(response => {
         // check weather the response has valid bindings field.
         if (response && response["results"] && response["results"]["bindings"]) {
             // Take the bindings as a parameter and format the bindings.
@@ -103,28 +70,6 @@ jQuery(function() {
         }
         // iterating through all the bindings.
         return geojson;
-    }
-    
-    /***
-     * Reformats the bindings to the simplified json structure.
-     */
-    function reformatThebindings(newBindings) {
-        var finalBindings = [];
-        // iterating through all the bindings.
-        for (const binding of newBindings) {
-            var bindingObj = {};
-            // The bindings has internal fields like yearinstalled, coordinates etc.
-            for (const [key, objValue] of Object.entries(binding)) {
-                if (objValue["value"] || objValue["value"] === "") {
-                    // store the required fields.
-                    bindingObj[key] = objValue["value"];
-                }
-            }
-            // Add the binding object to the final bindings, used to map the markers on leaflet map.
-            finalBindings.push(bindingObj)
-        }
-        // return the final findings.
-        return finalBindings;
     }
     
     /***
