@@ -1033,9 +1033,11 @@ menuItems.forEach((item) => {
             document.body.classList.toggle("active-sidebar");
         }
 
-        // show content
+              // show content
         // showContent(target.dataset.item);
         // add active class to menu item
+        // document.
+
         addRemoveActiveItem(target, "active-item");
     });
 });
