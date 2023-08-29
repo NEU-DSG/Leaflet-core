@@ -31,6 +31,16 @@ var baseMaps = {
     "OpenStreetMap": openStreetTile
 };
 
+$('#short-sidebar-icon').on('click', function () {
+    $('#sidebar').toggleClass('display-none');
+    $('#short-sidebar').toggleClass('display-none');
+});
+
+$('#sidebar-icon').on('click', function () {
+    $('#sidebar').toggleClass('display-none');
+    $('#short-sidebar').toggleClass('display-none');
+});
+
 var layerControl = L.control.layers(baseMaps).addTo(map);
 
 L.control.zoom({
@@ -464,8 +474,8 @@ function generateMarkersOnMap(jsonData) {
         var id = "d" + year;
         if (!document.getElementById(id)) {
             // html string used to show the items in the year installed section.
-            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
-                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label></div>";
+            var htmlString = "<li><div><input class='form-check-input' type='checkbox' id ='" +
+                id + "' name='" + id + "'" + "checked>" + "<label class='form-check-label pl-4' for = '" + id + "'> " + year + " (" + count + ")" + "</label></div></li>";
             // insert the html string to the div section.
             document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
             // adding the change event listener to the checkboxes.
@@ -482,9 +492,9 @@ function generateMarkersOnMap(jsonData) {
         var id = currentCategory.replace("; ", "-");
         if (!document.getElementById(id)) {
             // html string used to show the items in the categories section.
-            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
-                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + currentCategory + " (" + count + ")" +
-                "</label></div>";
+            var htmlString = "<li><div><input class='form-check-input' type='checkbox' id ='" +
+                id + "' name='" + id + "'" + "checked>" + "<label class='form-check-label pl-4' for = '" + id + "'> " + currentCategory + " (" + count + ")" +
+                "</label></div></li>";
             // insert the html string to the div section. 
             document.getElementById("art-category-section").insertAdjacentHTML('beforeend', htmlString);
             // adding the change event listener to the checkboxes.
@@ -501,8 +511,8 @@ function generateMarkersOnMap(jsonData) {
         var id = neighborhood.replace("; ", "-");
         if (!document.getElementById(id)) {
             // html string used to show the items in the neighborhoods section.
-            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
-                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label></div>";
+            var htmlString = "<li><div><input class='form-check-input' type='checkbox' id ='" +
+                id + "' name='" + id + "'" + "checked>" + "<label class='form-check-label pl-4' for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label></div></li>";
             // insert the html string to the div section.
             document.getElementById("neighbourhood-category-section").insertAdjacentHTML('beforeend', htmlString);
            // adding the change event listener to the checkboxes.
@@ -519,8 +529,8 @@ function generateMarkersOnMap(jsonData) {
         var id = material.replace("; ", "-");
         if (!document.getElementById(id)) {
             // html string used to show the items in the materials section.
-            var htmlString = "<div class = 'list-item'> <input type = 'checkbox' id = '" +
-                id + "' name='" + id + "'" + "checked>" + "<label for = '" + id + "'> " + material + " (" + count + ")" + "</label></div>";
+            var htmlString = "<li><div><input class='form-check-input' type='checkbox' id ='" +
+                id + "' name='" + id + "'" + "checked>" + "<label class='form-check-label pl-4' for = '" + id + "'> " + material + " (" + count + ")" + "</label></div></li>";
             // insert the html string to the div section.
             document.getElementById("material-category-section").insertAdjacentHTML('beforeend', htmlString);
             // adding the change event listener to the checkboxes.
@@ -1043,10 +1053,10 @@ menuItems.forEach((item) => {
 });
 
 // close sidebar when click on close button
-buttonClose.addEventListener("click", () => {
-    // close the filter on left hand.
-    closeSidebar();
-});
+// buttonClose.addEventListener("click", () => {
+//     // close the filter on left hand.
+//     closeSidebar();
+// });
 
 // remove active class from menu item and content
 function addRemoveActiveItem(target, className) {
