@@ -26,6 +26,23 @@
    </head>
    <!-- Body section starts -->
    <body>
+      <!-- Modal -->
+         <div class="modal" id="no-search-item-modal" tabindex="-1" data-backdrop="true" aria-labelledby="no-search-item-modal-label" aria-hidden="true" style="display: none;">
+            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="no-search-item-modal-label">Notification</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <p>No items found for the search</p>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+            </div>
+         </div>
       <div class="d-flex">
          <!-- As a link -->
          <nav class="navbar bg-body-tertiary">

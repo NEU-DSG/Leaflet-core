@@ -4,6 +4,8 @@ jQuery(function() {
  * in for the sample json data which is available in the file path 'res/data/query.json'.
  */
 
+
+ 
 //A world Map is created here using leaflet js. 
 // Base tile creation and setup (stadia maps is being used here for tile layers).     
 var cartoDBTile = L.tileLayer(configMaps.titleLayerMap, {
@@ -631,15 +633,19 @@ function generateMarkersOnMap(jsonData) {
             // seach api to set the cofiguration.
             var result = fuse.search(searchText);
             // iterate throgh the searched results and get the bindings.
-            result.forEach(binding => {
-                if (binding["item"]) {
-                    searchedBindings.push(binding["item"]);
-                }
-            });
-            searchBindings = searchedBindings;
-             // update the count and filters data.
-            updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
-            filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+            if(result.length == 0) {
+                $("#no-search-item-modal").modal('show'); 
+            } else {
+                result.forEach(binding => {
+                    if (binding["item"]) {
+                        searchedBindings.push(binding["item"]);
+                    }
+                });
+                searchBindings = searchedBindings;
+                 // update the count and filters data.
+                updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+            }
         }
     });
 
