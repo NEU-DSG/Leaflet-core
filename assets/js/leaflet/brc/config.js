@@ -30,7 +30,7 @@ const configMaps = {
     imageContainerMargin: 70,
     iconUrl: '/assets/images/leaflet/brc/marker-icon-blue.png',
     iconSize: [25, 41],
-    iconAnchor: [12, 41],
+    iconAnchor: [23.5, 47],
     popupAnchor: [0, -35],
     boundsPadding: [20, 20],
     setViewZoom: 70,

@@ -616,36 +616,45 @@ function generateMarkersOnMap(jsonData) {
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
+    function searchForBindings() {
+         // get searched value.
+         var searchText = document.getElementById("search-box-input").value;
+         var searchedBindings = [];
+         // options and keys for the fuse object to search for in the json data.
+         const options = {
+             threshold: configMaps.fuseThreshold,
+             keys: configMaps.fuseKeys
+         };
+         // clear the markers and Update the map pins with the searched text from the user.
+         if (searchText && bindings && bindings.length > 0) {
+             // fuse is used to search with different options based on the JSON fields.
+             const fuse = new Fuse(bindings, options);
+             // seach api to set the cofiguration.
+             var result = fuse.search(searchText);
+             // iterate throgh the searched results and get the bindings.
+             if(result.length == 0) {
+                 $("#no-search-item-modal").modal('show'); 
+             } else {
+                 result.forEach(binding => {
+                     if (binding["item"]) {
+                         searchedBindings.push(binding["item"]);
+                     }
+                 });
+                 searchBindings = searchedBindings;
+                  // update the count and filters data.
+                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+                 filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+             }
+         }
+    }
     // filter search click event handler.
     document.getElementById('filters-search').addEventListener('click', (e) => {
-        // get searched value.
-        var searchText = document.getElementById("search-box-input").value;
-        var searchedBindings = [];
-        // options and keys for the fuse object to search for in the json data.
-        const options = {
-            threshold: configMaps.fuseThreshold,
-            keys: configMaps.fuseKeys
-        };
-        // clear the markers and Update the map pins with the searched text from the user.
-        if (searchText && bindings && bindings.length > 0) {
-            // fuse is used to search with different options based on the JSON fields.
-            const fuse = new Fuse(bindings, options);
-            // seach api to set the cofiguration.
-            var result = fuse.search(searchText);
-            // iterate throgh the searched results and get the bindings.
-            if(result.length == 0) {
-                $("#no-search-item-modal").modal('show'); 
-            } else {
-                result.forEach(binding => {
-                    if (binding["item"]) {
-                        searchedBindings.push(binding["item"]);
-                    }
-                });
-                searchBindings = searchedBindings;
-                 // update the count and filters data.
-                updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
-            }
+        searchForBindings();
+    });
+    $('#search-box-input').keypress(function(event){
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        if(keycode == '13'){
+            searchForBindings();
         }
     });
 
