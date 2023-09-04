@@ -122,7 +122,6 @@ function redirectToStoryMap(lat, lng) {
         var markerLatLng = layer.getLatLng();
         var distance = distanceInMiles(lat, lng, markerLatLng.lat, markerLatLng.lng);
         if (distance <= 0.25) {
-          console.log(layer)
           filteredData.push(layer["options"]["markerInformation"]["work"]);
         }
       });
@@ -132,7 +131,7 @@ function redirectToStoryMap(lat, lng) {
 map.on('contextmenu',function(e){
     const location = e.latlng
     var paragraphElement = document.createElement("p");
-    paragraphElement.textContent = "Naviage to Story Map (0.25 miles radius):";
+    paragraphElement.textContent = "Navigate to Story Map (0.25 miles radius) ";
     var anchorTag = document.createElement('a');
     anchorTag.href = '#';
     anchorTag.textContent = 'here';
@@ -155,12 +154,25 @@ function filterDataAndMoveToStoryMap(filteredData) {
 
 clusterMarkersGroup.on('clustercontextmenu', function (a) {
 	// a.layer is actually a cluster
-    const childrens = a.layer.getAllChildMarkers()
-    const filteredData = []
-    for (const element of childrens) {
-        filteredData.push(element["options"]["markerInformation"]["work"]);
-    }
-    filterDataAndMoveToStoryMap(filteredData);
+    const location = a.latlng
+    var paragraphElement = document.createElement("p");
+    paragraphElement.textContent = "Navigate to Story Map with selected bindings ";
+    var anchorTag = document.createElement('a');
+    anchorTag.href = '#';
+    anchorTag.textContent = 'here';
+    anchorTag.onclick = function() {
+        const childrens = a.layer.getAllChildMarkers()
+        const filteredData = []
+        for (const element of childrens) {
+            filteredData.push(element["options"]["markerInformation"]["work"]);
+        }
+        filterDataAndMoveToStoryMap(filteredData);
+    };
+    paragraphElement.appendChild(anchorTag);
+    var popup = L.popup()
+    .setLatLng(location)
+    .setContent(paragraphElement)
+    .openOn(map);
 });
 
 
@@ -248,7 +260,20 @@ function addMarkerToTheMap(binding) {
     marker.bindPopup(popUpHtml);
 
     marker.on('contextmenu', function(event) {
-        filterDataAndMoveToStoryMap([event.target.options.markerInformation["work"]]);
+        const location = event.latlng
+        var paragraphElement = document.createElement("p");
+        paragraphElement.textContent = "Navigate to Story Map with selected bindings ";
+        var anchorTag = document.createElement('a');
+        anchorTag.href = '#';
+        anchorTag.textContent = 'here';
+        anchorTag.onclick = function() {
+            filterDataAndMoveToStoryMap([event.target.options.markerInformation["work"]]);
+        };
+        paragraphElement.appendChild(anchorTag);
+        var popup = L.popup()
+        .setLatLng(location)
+        .setContent(paragraphElement)
+        .openOn(map);
     });
     // Add the marker to the leaflet map as a layer.
     clusterMarkersGroup.addLayer(marker);
