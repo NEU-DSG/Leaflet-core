@@ -4,8 +4,6 @@ jQuery(function() {
  * in for the sample json data which is available in the file path 'res/data/query.json'.
  */
 
-
- 
 //A world Map is created here using leaflet js. 
 // Base tile creation and setup (stadia maps is being used here for tile layers).     
 var cartoDBTile = L.tileLayer(configMaps.titleLayerMap, {
@@ -23,6 +21,7 @@ var openStreetTile = L.tileLayer(configMaps.titleLayerOpenStreetMap, {
 
 var map = L.map('map', {
     zoom: configMaps.zoom,
+    zoomSnap: 0.25,
     center: configMaps.center,
     zoomControl: configMaps.zoomControl,
     layers: [cartoDBTile,openStreetTile] 
@@ -33,15 +32,6 @@ var baseMaps = {
     "OpenStreetMap": openStreetTile
 };
 
-$('#short-sidebar-icon').on('click', function () {
-    $('#sidebar').toggleClass('display-none');
-    $('#short-sidebar').toggleClass('display-none');
-});
-
-$('#sidebar-icon').on('click', function () {
-    $('#sidebar').toggleClass('display-none');
-    $('#short-sidebar').toggleClass('display-none');
-});
 
 var layerControl = L.control.layers(baseMaps).addTo(map);
 
@@ -1141,4 +1131,19 @@ function closeSidebar() {
     // activeContent.classList.remove("active-content");
 }
 
+
+$('#short-sidebar-icon').on('click', function () {
+    // console.log(map)
+    $('#sidebar').toggleClass('display-none');
+    $('#short-sidebar').toggleClass('display-none');
+    map.zoomOut(0.75);
 });
+
+$('#sidebar-icon').on('click', function () {
+    // console.log(map)
+    $('#sidebar').toggleClass('display-none');
+    $('#short-sidebar').toggleClass('display-none');
+    map.zoomIn(0.75);
+});
+});
+

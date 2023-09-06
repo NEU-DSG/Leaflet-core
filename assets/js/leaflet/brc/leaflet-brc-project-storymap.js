@@ -238,19 +238,24 @@ jQuery(function() {
             })
             .addTo(map);
         $('#contents').append("<div class='space-at-the-bottom'><a href='#space-at-the-top'><i class='fa fa-chevron-up'></i></br><small>Top</small></a></div>");
-        if (jsonData["features"].length == 0) {
-            // Define the bounds for the Boston area
-            var southWest = L.latLng(42.22788, -71.19179); // Bottom-left corner of the bounding box
-            var northEast = L.latLng(42.39629, -70.98622); // Top-right corner of the bounding box
-            var bounds = L.latLngBounds(southWest, northEast);
-            // Set the maximum bounds for the map to restrict it to the Boston area
-            map.fitBounds(bounds);
-            map.setZoom(map.getZoom() + 1); 
-        } else {
+        if (geoJsonObj.getBounds().isValid()) {
             map.fitBounds(geoJsonObj.getBounds(), {
                 padding: configStoryMap.boundsPadding
             });
         }
+        // if (!geoJsonObj.getBounds().isValid()) {
+        //     // Define the bounds for the Boston area
+        //     var southWest = L.latLng(42.22788, -71.19179); // Bottom-left corner of the bounding box
+        //     var northEast = L.latLng(42.39629, -70.98622); // Top-right corner of the bounding box
+        //     var bounds = L.latLngBounds(southWest, northEast);
+        //     // Set the maximum bounds for the map to restrict it to the Boston area
+        //     map.fitBounds(bounds);
+        //     map.setZoom(map.getZoom() + 1); 
+        // } else {
+        //     map.fitBounds(geoJsonObj.getBounds(), {
+        //         padding: configStoryMap.boundsPadding
+        //     });
+        // }
     }
     // This adds data as a new layer to the map
     function refreshLayer(data, map, coord, zoom) {
