@@ -76,7 +76,7 @@ map.on('geolet_success', function(data) {
     // check for edge cases.
     if (data && data.first == true) {
         // set the view of the leaflet map, so that all the markers are visible, based on lat and lng.
-        map.setView([data.latlng["lat"], data.latlng["lng"]], configMaps.zoomLevel);
+        map.setView([data.latlng["lat"], data.latlng["lng"]], zoomLevel);
     }
 });
 
