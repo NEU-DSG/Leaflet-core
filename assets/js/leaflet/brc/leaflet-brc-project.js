@@ -658,6 +658,7 @@ function generateMarkersOnMap(jsonData) {
                  searchBindings = searchedBindings;
                   // update the count and filters data.
                  updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+                 resetTheFilters(yearInstalled, categories, neighborhoods, materials);
                  filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
              }
          }
@@ -704,9 +705,36 @@ function getCoordinates(binding) {
 }
 
 /**
+ * When user search for a bindings then the facets filters will reset.
+ * 
+ * 
+ */
+function resetTheFilters(yearInstalled, categories, neighborhoods, materials) {
+    yearInstalled.forEach((count, year) => {
+        var id = "d" + year;
+        document.getElementById(id).checked = true;
+    });
+    document.getElementById('date-selectall').checked = true;
+    categories.forEach((count, currentCategory) => {
+        var id = currentCategory.replace("; ", "-");
+        document.getElementById(id).checked = true;
+    });
+    document.getElementById('category-selectall').checked = true;
+    neighborhoods.forEach((count, neighborhood) => {
+        var id = neighborhood.replace("; ", "-");
+        document.getElementById(id).checked = true;
+    });
+    document.getElementById('neighborhood-selectall').checked = true;
+    materials.forEach((count, material) => {
+        var id = material.replace("; ", "-");
+        document.getElementById(id).checked = true;
+    });
+    document.getElementById('material-selectall').checked = true;
+}
+/**
  * Filters the markers available on the map.
  * 
- * @param {Array} bindings - The bindings data.
+ * 
  */
 function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, searchFlag) {
     var filterBindings = [];
@@ -723,6 +751,14 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         tickedCategories = [],
         tickedNeighbourhood = [],
         tickedMaterials = [];
+    
+    // iterate through yearInstalled and add all the checkboxes that are checked.
+    yearInstalled.forEach((count, year) => {
+        var id = "d" + year;
+        if (document.getElementById(id).checked) {
+            tickedRanges.push(year);
+        }
+    });
 
     // iterate through categories and add all the checkboxes that are checked.
     categories.forEach((count, currentCategory) => {
@@ -745,14 +781,6 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         var id = material.replace("; ", "-");
         if (document.getElementById(id).checked) {
             tickedMaterials.push(material);
-        }
-    });
-
-    // iterate through yearInstalled and add all the checkboxes that are checked.
-    yearInstalled.forEach((count, year) => {
-        var id = "d" + year;
-        if (document.getElementById(id).checked) {
-            tickedRanges.push(year);
         }
     });
 
