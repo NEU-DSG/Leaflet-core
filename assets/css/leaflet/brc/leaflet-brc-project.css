@@ -721,3 +721,7 @@ svg:not(:root) {
 .ptb-5 {
     padding: 5px 0px 5px 0px;
 }
+
+.fs-0p8 {
+    font-size: 0.8em;
+}
