@@ -21,6 +21,7 @@ var openStreetTile = L.tileLayer(configMaps.titleLayerOpenStreetMap, {
 
 var map = L.map('map', {
     zoom: configMaps.zoom,
+    zoomSnap: 0.25,
     center: configMaps.center,
     zoomControl: configMaps.zoomControl,
     layers: [cartoDBTile,openStreetTile] 
@@ -31,15 +32,6 @@ var baseMaps = {
     "OpenStreetMap": openStreetTile
 };
 
-$('#short-sidebar-icon').on('click', function () {
-    $('#sidebar').toggleClass('display-none');
-    $('#short-sidebar').toggleClass('display-none');
-});
-
-$('#sidebar-icon').on('click', function () {
-    $('#sidebar').toggleClass('display-none');
-    $('#short-sidebar').toggleClass('display-none');
-});
 
 var layerControl = L.control.layers(baseMaps).addTo(map);
 
@@ -84,7 +76,7 @@ map.on('geolet_success', function(data) {
     // check for edge cases.
     if (data && data.first == true) {
         // set the view of the leaflet map, so that all the markers are visible, based on lat and lng.
-        map.setView([data.latlng["lat"], data.latlng["lng"]], configMaps.zoomLevel);
+        map.setView([data.latlng["lat"], data.latlng["lng"]], zoomLevel);
     }
 });
 
@@ -120,7 +112,6 @@ function redirectToStoryMap(lat, lng) {
         var markerLatLng = layer.getLatLng();
         var distance = distanceInMiles(lat, lng, markerLatLng.lat, markerLatLng.lng);
         if (distance <= 0.25) {
-          console.log(layer)
           filteredData.push(layer["options"]["markerInformation"]["work"]);
         }
       });
@@ -130,7 +121,7 @@ function redirectToStoryMap(lat, lng) {
 map.on('contextmenu',function(e){
     const location = e.latlng
     var paragraphElement = document.createElement("p");
-    paragraphElement.textContent = "Naviage to Story Map (0.25 miles radius):";
+    paragraphElement.textContent = "Navigate to Story Map (0.25 miles radius) ";
     var anchorTag = document.createElement('a');
     anchorTag.href = '#';
     anchorTag.textContent = 'here';
@@ -153,12 +144,25 @@ function filterDataAndMoveToStoryMap(filteredData) {
 
 clusterMarkersGroup.on('clustercontextmenu', function (a) {
 	// a.layer is actually a cluster
-    const childrens = a.layer.getAllChildMarkers()
-    const filteredData = []
-    for (const element of childrens) {
-        filteredData.push(element["options"]["markerInformation"]["work"]);
-    }
-    filterDataAndMoveToStoryMap(filteredData);
+    const location = a.latlng
+    var paragraphElement = document.createElement("p");
+    paragraphElement.textContent = "Navigate to Story Map with selected bindings ";
+    var anchorTag = document.createElement('a');
+    anchorTag.href = '#';
+    anchorTag.textContent = 'here';
+    anchorTag.onclick = function() {
+        const childrens = a.layer.getAllChildMarkers()
+        const filteredData = []
+        for (const element of childrens) {
+            filteredData.push(element["options"]["markerInformation"]["work"]);
+        }
+        filterDataAndMoveToStoryMap(filteredData);
+    };
+    paragraphElement.appendChild(anchorTag);
+    var popup = L.popup()
+    .setLatLng(location)
+    .setContent(paragraphElement)
+    .openOn(map);
 });
 
 
@@ -246,7 +250,20 @@ function addMarkerToTheMap(binding) {
     marker.bindPopup(popUpHtml);
 
     marker.on('contextmenu', function(event) {
-        filterDataAndMoveToStoryMap([event.target.options.markerInformation["work"]]);
+        const location = event.latlng
+        var paragraphElement = document.createElement("p");
+        paragraphElement.textContent = "Navigate to Story Map with selected bindings ";
+        var anchorTag = document.createElement('a');
+        anchorTag.href = '#';
+        anchorTag.textContent = 'here';
+        anchorTag.onclick = function() {
+            filterDataAndMoveToStoryMap([event.target.options.markerInformation["work"]]);
+        };
+        paragraphElement.appendChild(anchorTag);
+        var popup = L.popup()
+        .setLatLng(location)
+        .setContent(paragraphElement)
+        .openOn(map);
     });
     // Add the marker to the leaflet map as a layer.
     clusterMarkersGroup.addLayer(marker);
@@ -614,32 +631,46 @@ function generateMarkersOnMap(jsonData) {
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
+    function searchForBindings() {
+         // get searched value.
+         var searchText = document.getElementById("search-box-input").value;
+         var searchedBindings = [];
+         // options and keys for the fuse object to search for in the json data.
+         const options = {
+             threshold: configMaps.fuseThreshold,
+             keys: configMaps.fuseKeys
+         };
+         // clear the markers and Update the map pins with the searched text from the user.
+         if (searchText && bindings && bindings.length > 0) {
+             // fuse is used to search with different options based on the JSON fields.
+             const fuse = new Fuse(bindings, options);
+             // seach api to set the cofiguration.
+             var result = fuse.search(searchText);
+             // iterate throgh the searched results and get the bindings.
+             if(result.length == 0) {
+                 $("#no-search-item-modal").modal('show'); 
+             } else {
+                 result.forEach(binding => {
+                     if (binding["item"]) {
+                         searchedBindings.push(binding["item"]);
+                     }
+                 });
+                 searchBindings = searchedBindings;
+                  // update the count and filters data.
+                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+                 resetTheFilters(yearInstalled, categories, neighborhoods, materials);
+                 filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+             }
+         }
+    }
     // filter search click event handler.
     document.getElementById('filters-search').addEventListener('click', (e) => {
-        // get searched value.
-        var searchText = document.getElementById("search-box-input").value;
-        var searchedBindings = [];
-        // options and keys for the fuse object to search for in the json data.
-        const options = {
-            threshold: configMaps.fuseThreshold,
-            keys: configMaps.fuseKeys
-        };
-        // clear the markers and Update the map pins with the searched text from the user.
-        if (searchText && bindings && bindings.length > 0) {
-            // fuse is used to search with different options based on the JSON fields.
-            const fuse = new Fuse(bindings, options);
-            // seach api to set the cofiguration.
-            var result = fuse.search(searchText);
-            // iterate throgh the searched results and get the bindings.
-            result.forEach(binding => {
-                if (binding["item"]) {
-                    searchedBindings.push(binding["item"]);
-                }
-            });
-            searchBindings = searchedBindings;
-             // update the count and filters data.
-            updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
-            filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+        searchForBindings();
+    });
+    $('#search-box-input').keypress(function(event){
+        var keycode = (event.keyCode ? event.keyCode : event.which);
+        if(keycode == '13'){
+            searchForBindings();
         }
     });
 
@@ -674,9 +705,36 @@ function getCoordinates(binding) {
 }
 
 /**
+ * When user search for a bindings then the facets filters will reset.
+ * 
+ * 
+ */
+function resetTheFilters(yearInstalled, categories, neighborhoods, materials) {
+    yearInstalled.forEach((count, year) => {
+        var id = "d" + year;
+        document.getElementById(id).checked = true;
+    });
+    document.getElementById('date-selectall').checked = true;
+    categories.forEach((count, currentCategory) => {
+        var id = currentCategory.replace("; ", "-");
+        document.getElementById(id).checked = true;
+    });
+    document.getElementById('category-selectall').checked = true;
+    neighborhoods.forEach((count, neighborhood) => {
+        var id = neighborhood.replace("; ", "-");
+        document.getElementById(id).checked = true;
+    });
+    document.getElementById('neighborhood-selectall').checked = true;
+    materials.forEach((count, material) => {
+        var id = material.replace("; ", "-");
+        document.getElementById(id).checked = true;
+    });
+    document.getElementById('material-selectall').checked = true;
+}
+/**
  * Filters the markers available on the map.
  * 
- * @param {Array} bindings - The bindings data.
+ * 
  */
 function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, searchFlag) {
     var filterBindings = [];
@@ -693,6 +751,14 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         tickedCategories = [],
         tickedNeighbourhood = [],
         tickedMaterials = [];
+    
+    // iterate through yearInstalled and add all the checkboxes that are checked.
+    yearInstalled.forEach((count, year) => {
+        var id = "d" + year;
+        if (document.getElementById(id).checked) {
+            tickedRanges.push(year);
+        }
+    });
 
     // iterate through categories and add all the checkboxes that are checked.
     categories.forEach((count, currentCategory) => {
@@ -715,14 +781,6 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         var id = material.replace("; ", "-");
         if (document.getElementById(id).checked) {
             tickedMaterials.push(material);
-        }
-    });
-
-    // iterate through yearInstalled and add all the checkboxes that are checked.
-    yearInstalled.forEach((count, year) => {
-        var id = "d" + year;
-        if (document.getElementById(id).checked) {
-            tickedRanges.push(year);
         }
     });
 
@@ -1101,4 +1159,19 @@ function closeSidebar() {
     // activeContent.classList.remove("active-content");
 }
 
+
+$('#short-sidebar-icon').on('click', function () {
+    // console.log(map)
+    $('#sidebar').toggleClass('display-none');
+    $('#short-sidebar').toggleClass('display-none');
+    map.zoomOut(0.75);
 });
+
+$('#sidebar-icon').on('click', function () {
+    // console.log(map)
+    $('#sidebar').toggleClass('display-none');
+    $('#short-sidebar').toggleClass('display-none');
+    map.zoomIn(0.75);
+});
+});
+

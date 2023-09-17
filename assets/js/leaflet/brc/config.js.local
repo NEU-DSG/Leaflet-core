@@ -28,7 +28,8 @@ const configMaps = {
         "workDescription": "Work Description:"
     },
     imageContainerMargin: 70,
-    iconUrl: 'Leaflet-core/assets/images/leaflet/brc/marker-icon-blue.png',
+    iconUrl: '/assets/images/leaflet/brc/marker-icon-blue.png',
+    //iconUrl: '../wp-content/plugins/drs-tk/libraries/Ceres/assets/images/leaflet/brc/marker-icon-blue.png',
     iconSize: [25, 41],
     iconAnchor: [23.5, 47],
     popupAnchor: [0, -35],
@@ -92,8 +93,8 @@ const configMaps = {
 };
 
 const configStoryMap = {
-    center: [42.361145, -71.057083],
-    zoom: 13,
+    center: [0, 0],
+    zoom: 5,
     scrollWheelZoom: true,
     titleLayerMap: 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
     titleLayerOpenStreet: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -112,7 +113,8 @@ const configStoryMap = {
         "workDescription": "Work Description:"
     },
     imageContainerMargin: 70,
-    iconUrl: 'Leaflet-core/assets/images/leaflet/brc/marker-icon-blue.png',
+    iconUrl: '/assets/images/leaflet/brc/marker-icon-blue.png',
+    //iconUrl: '../wp-content/plugins/drs-tk/libraries/Ceres/assets/images/leaflet/brc/marker-icon-blue.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [0, -35],
