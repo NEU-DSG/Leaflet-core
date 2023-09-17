@@ -28,7 +28,7 @@ const configMaps = {
         "workDescription": "Work Description:"
     },
     imageContainerMargin: 70,
-    iconUrl: '/assets/images/leaflet/brc/marker-icon-blue.png',
+    iconUrl: 'Leaflet-core/assets/images/leaflet/brc/marker-icon-blue.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [0, -35],
@@ -112,7 +112,7 @@ const configStoryMap = {
         "workDescription": "Work Description:"
     },
     imageContainerMargin: 70,
-    iconUrl: '/assets/images/leaflet/brc/marker-icon-blue.png',
+    iconUrl: 'Leaflet-core/assets/images/leaflet/brc/marker-icon-blue.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [0, -35],
