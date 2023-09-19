@@ -142,7 +142,7 @@ jQuery(function() {
             class: 'chapter-header'
         });
         var image = $('<img>', {
-            src: '/assets/images/leaflet/brc/no-image-available.jpg',
+            src: configStoryMap.noImageURL,
         });
         if (feature.properties.hasOwnProperty("image") && feature.properties["image"]) {
             image = $('<img>', {

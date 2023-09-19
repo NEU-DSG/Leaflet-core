@@ -113,6 +113,7 @@ const configStoryMap = {
     },
     imageContainerMargin: 70,
     iconUrl: '/assets/images/leaflet/brc/marker-icon-blue.png',
+    noImageURL: '/assets/images/leaflet/brc/no-image-available.jpg',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [0, -35],
