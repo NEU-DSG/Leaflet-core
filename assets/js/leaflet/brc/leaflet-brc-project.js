@@ -24,7 +24,7 @@ var map = L.map('map', {
     zoomSnap: 0.25,
     center: configMaps.center,
     zoomControl: configMaps.zoomControl,
-    layers: [cartoDBTile,openStreetTile] 
+    layers: [cartoDBTile, openStreetTile]
 });
 
 var baseMaps = {
@@ -83,7 +83,7 @@ map.on('geolet_success', function(data) {
 
 /** Geo-let error event which is triggered when user tries to use locate me but and it throws error. */
 map.on('geolet_error', function(data) {
-     // check for edge cases.
+    // check for edge cases.
     if (data && data.raw && data.raw.message) {
         // send an alert message if there is a error while fetching the location of client.
         alert(data.raw.message);
@@ -100,8 +100,8 @@ function distanceInMiles(lat1, lon1, lat2, lon2) {
     var dLat = (lat2 - lat1) * Math.PI / 180;
     var dLon = (lon2 - lon1) * Math.PI / 180;
     var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     var distance = R * c;
     return distance;
@@ -113,13 +113,13 @@ function redirectToStoryMap(lat, lng) {
         var markerLatLng = layer.getLatLng();
         var distance = distanceInMiles(lat, lng, markerLatLng.lat, markerLatLng.lng);
         if (distance <= 0.25) {
-          filteredData.push(layer["options"]["markerInformation"]["work"]);
+            filteredData.push(layer["options"]["markerInformation"]["work"]);
         }
-      });
-      filterDataAndMoveToStoryMap(filteredData);
+    });
+    filterDataAndMoveToStoryMap(filteredData);
 }
 
-map.on('contextmenu',function(e){
+map.on('contextmenu', function(e) {
     const location = e.latlng
     var paragraphElement = document.createElement("p");
     paragraphElement.textContent = "Navigate to Story Map (0.25 miles radius) ";
@@ -131,20 +131,22 @@ map.on('contextmenu',function(e){
     };
     paragraphElement.appendChild(anchorTag);
     var popup = L.popup()
-    .setLatLng(location)
-    .setContent(paragraphElement)
-    .openOn(map);
+        .setLatLng(location)
+        .setContent(paragraphElement)
+        .openOn(map);
 });
 
 
 function filterDataAndMoveToStoryMap(filteredData) {
-    const properties = {"filteredData" : filteredData}
+    const properties = {
+        "filteredData": filteredData
+    }
     localStorage.setItem('properties', JSON.stringify(properties));
-    window.location.href="./brc-leaflet-storymap.html"; 
+    window.location.href = "./brc-leaflet-storymap.html";
 }
 
-clusterMarkersGroup.on('clustercontextmenu', function (a) {
-	// a.layer is actually a cluster
+clusterMarkersGroup.on('clustercontextmenu', function(a) {
+    // a.layer is actually a cluster
     const location = a.latlng
     var paragraphElement = document.createElement("p");
     paragraphElement.textContent = "Navigate to Story Map with selected bindings ";
@@ -161,9 +163,9 @@ clusterMarkersGroup.on('clustercontextmenu', function (a) {
     };
     paragraphElement.appendChild(anchorTag);
     var popup = L.popup()
-    .setLatLng(location)
-    .setContent(paragraphElement)
-    .openOn(map);
+        .setLatLng(location)
+        .setContent(paragraphElement)
+        .openOn(map);
 });
 
 
@@ -206,7 +208,7 @@ function createPopUpHtmlForBinding(binding) {
         // append the work label as an heading.
         popUpHtml += binding["workLabel"] + "</h1><ul class='popup-list'></ul>";
     } else {
-         // if there is no label then appending just location information text.
+        // if there is no label then appending just location information text.
         popUpHtml += "Location Information</h1><ul class='popup-list'></ul>";
     }
     for (const [key, value] of Object.entries(configMaps.bindingKeysObject)) {
@@ -262,9 +264,9 @@ function addMarkerToTheMap(binding) {
         };
         paragraphElement.appendChild(anchorTag);
         var popup = L.popup()
-        .setLatLng(location)
-        .setContent(paragraphElement)
-        .openOn(map);
+            .setLatLng(location)
+            .setContent(paragraphElement)
+            .openOn(map);
     });
     // Add the marker to the leaflet map as a layer.
     clusterMarkersGroup.addLayer(marker);
@@ -287,7 +289,7 @@ function customYearRange(fromDate) {
         // if date range is anywhere in between 1900 to 1929 then merge into one range.
         yearRange = "1900-1929";
     } else if (fromDate >= 1930 && fromDate <= 1969) {
-         // if date range is anywhere in between 1930 to 1969 then merge into one range.
+        // if date range is anywhere in between 1930 to 1969 then merge into one range.
         yearRange = "1930-1969";
     } else if (fromDate >= 1970) {
         // if date is greater than 1970 then divide the years formatting into 10 range.
@@ -336,8 +338,7 @@ function generateMarkersOnMap(jsonData) {
                         yearInstalled.set(yearRange, currentYear + 1);
                     }
                 });
-            } 
-            else {
+            } else {
                 // if only one year is available in the binding the store that in yearinstalled.
                 minYear = Math.min(minYear, parseInt(binding["yearInstalled"]));
                 maxYear = Math.max(maxYear, parseInt(binding["yearInstalled"]));
@@ -377,7 +378,7 @@ function generateMarkersOnMap(jsonData) {
                     categories.set(binding["categories"], currentCat + 1);
                 }
             } else {
-                 // if there are multiple categories then split by semicolons to get all categories. 
+                // if there are multiple categories then split by semicolons to get all categories. 
                 var multipleCat = binding["categories"].split("; ");
                 // iterate through all the categories.
                 multipleCat.forEach(cat => {
@@ -392,7 +393,7 @@ function generateMarkersOnMap(jsonData) {
         }
         // Neighborhoods filters parsing and updation.
         if (binding["neighborhoods"]) {
-             // check if the neighborhoods field has semicolon in it.
+            // check if the neighborhoods field has semicolon in it.
             if (!binding["neighborhoods"].includes(";")) {
                 var currentNeig = neighborhoods.get(binding["neighborhoods"]);
                 // update the neighborhoods count map.
@@ -533,7 +534,7 @@ function generateMarkersOnMap(jsonData) {
                 id + "' name='" + id + "'" + "checked>" + "<label class='form-check-label pl-4' for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label></div></li>";
             // insert the html string to the div section.
             document.getElementById("neighbourhood-category-section").insertAdjacentHTML('beforeend', htmlString);
-           // adding the change event listener to the checkboxes.
+            // adding the change event listener to the checkboxes.
             document.getElementById(id).addEventListener('change', (e) => {
                 // when there is a change update the filters data.
                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
@@ -564,7 +565,7 @@ function generateMarkersOnMap(jsonData) {
     document.getElementById('date-selectall').addEventListener('change', (e) => {
         // iterate each year range and uncheck all the checkboxes.
         yearInstalled.forEach((count, year) => {
-             // format date.
+            // format date.
             var id = "d" + year;
             // check if select all checkbox is checked or not.
             if (document.getElementById('date-selectall').checked) {
@@ -591,7 +592,7 @@ function generateMarkersOnMap(jsonData) {
                 document.getElementById(id).checked = false;
             }
         });
-         // update the count and filters data.
+        // update the count and filters data.
         updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
@@ -600,7 +601,7 @@ function generateMarkersOnMap(jsonData) {
     document.getElementById('neighborhood-selectall').addEventListener('change', (e) => {
         // iterate each neighbor and uncheck all the checkboxes.
         neighborhoods.forEach((count, neighborhood) => {
-             // format neighborhood.
+            // format neighborhood.
             var id = neighborhood.replace("; ", "-");
             // check if select all checkbox is checked or not.
             if (document.getElementById('neighborhood-selectall').checked) {
@@ -609,7 +610,7 @@ function generateMarkersOnMap(jsonData) {
                 document.getElementById(id).checked = false;
             }
         });
-         // update the count and filters data.
+        // update the count and filters data.
         updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
@@ -618,57 +619,56 @@ function generateMarkersOnMap(jsonData) {
     document.getElementById('material-selectall').addEventListener('change', (e) => {
         // iterate each material and uncheck all the checkboxes.
         materials.forEach((count, material) => {
-             // format material
+            // format material
             var id = material.replace("; ", "-");
-             // check if select all checkbox is checked or not.
+            // check if select all checkbox is checked or not.
             if (document.getElementById('material-selectall').checked) {
                 document.getElementById(id).checked = true;
             } else {
                 document.getElementById(id).checked = false;
             }
         });
-         // update the count and filters data.
+        // update the count and filters data.
         updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
     function searchForBindings(resetFlag) {
-         // get searched value.
-         var searchText = document.getElementById("search-box-input").value;
-         var searchedBindings = [];
-         // options and keys for the fuse object to search for in the json data.
-         const options = {
-             threshold: configMaps.fuseThreshold,
-             keys: configMaps.fuseKeys
-         };
-         // clear the markers and Update the map pins with the searched text from the user.
-         if (searchText && bindings && bindings.length > 0) {
-            if(resetFlag == false) {
-             // fuse is used to search with different options based on the JSON fields.
-             const fuse = new Fuse(bindings, options);
-             // seach api to set the cofiguration.
-             var result = fuse.search(searchText);
-             // iterate throgh the searched results and get the bindings.
-             if(result.length == 0) {
-                 $("#no-search-item-modal").modal('show'); 
-             } else {
-                 result.forEach(binding => {
-                     if (binding["item"]) {
-                         searchedBindings.push(binding["item"]);
-                     }
-                 });
-                 searchBindings = searchedBindings;
-            } 
-             }
-            else {
+        // get searched value.
+        var searchText = document.getElementById("search-box-input").value;
+        var searchedBindings = [];
+        // options and keys for the fuse object to search for in the json data.
+        const options = {
+            threshold: configMaps.fuseThreshold,
+            keys: configMaps.fuseKeys
+        };
+        // clear the markers and Update the map pins with the searched text from the user.
+        if (searchText && bindings && bindings.length > 0) {
+            if (resetFlag == false) {
+                // fuse is used to search with different options based on the JSON fields.
+                const fuse = new Fuse(bindings, options);
+                // seach api to set the cofiguration.
+                var result = fuse.search(searchText);
+                // iterate throgh the searched results and get the bindings.
+                if (result.length == 0) {
+                    $("#no-search-item-modal").modal('show');
+                } else {
+                    result.forEach(binding => {
+                        if (binding["item"]) {
+                            searchedBindings.push(binding["item"]);
+                        }
+                    });
+                    searchBindings = searchedBindings;
+                }
+            } else {
                 searchBindings = [];
             }
-                // update the count and filters data.
-                updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
-                resetTheFilters(yearInstalled, categories, neighborhoods, materials);
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
-                applyRefocusOnBindings();
-         }
+            // update the count and filters data.
+            updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+            resetTheFilters(yearInstalled, categories, neighborhoods, materials);
+            filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+            applyRefocusOnBindings();
+        }
     }
     // filter search click event handler.
     document.getElementById('filters-search').addEventListener('click', (e) => {
@@ -677,9 +677,9 @@ function generateMarkersOnMap(jsonData) {
     document.getElementById('reset-button').addEventListener('click', (e) => {
         searchForBindings(true);
     });
-    $('#search-box-input').keypress(function(event){
+    $('#search-box-input').keypress(function(event) {
         var keycode = (event.keyCode ? event.keyCode : event.which);
-        if(keycode == '13'){
+        if (keycode == '13') {
             searchForBindings(false);
         }
     });
@@ -761,7 +761,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
         tickedCategories = [],
         tickedNeighbourhood = [],
         tickedMaterials = [];
-    
+
     // iterate through yearInstalled and add all the checkboxes that are checked.
     yearInstalled.forEach((count, year) => {
         var id = "d" + year;
@@ -800,7 +800,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
             currentCategory = null,
             currentNeighborhood = null,
             currentMaterial = null;
-        
+
         // initial checkings.
         if (binding["yearInstalled"]) {
             currentYear = binding["yearInstalled"];
@@ -841,7 +841,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                         }
                     });
                 } else {
-                   // format year.
+                    // format year.
                     var yearRange = customYearRange(parseInt(binding["yearInstalled"]));
                     var currentYear = yearInstalled.get(yearRange);
                     var id = "d" + yearRange;
@@ -912,7 +912,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
             if (binding["materials"]) {
                 if (!binding["materials"].includes(";")) {
                     var currentMaterial = materials.get(binding["materials"]);
-                     // format material.
+                    // format material.
                     var id = binding["materials"].replace("; ", "-");
                     // update the materials section in left side filters.
                     if (document.getElementById(id).checked) {
@@ -926,7 +926,7 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                         var currentMaterial = materials.get(material);
                         // format material.
                         var id = material.replace("; ", "-");
-                         // update the materials section in left side filters.
+                        // update the materials section in left side filters.
                         if (document.getElementById(id).checked) {
                             materials.set(material, currentMaterial + 1);
                         }
@@ -1010,7 +1010,7 @@ function checkCategory(tickedCategories, currentCategory) {
  */
 function checkNeighbourHood(tickedNeighbourhood, currentNeighborhood) {
     if (currentNeighborhood) {
-         // format neighborhood.
+        // format neighborhood.
         var neighborhoods = currentNeighborhood.split("; ");
         // iterate through checked items in neighborhood section and check for its validity.
         for (let i = 0; i < tickedNeighbourhood.length; i++) {
@@ -1027,7 +1027,7 @@ function checkNeighbourHood(tickedNeighbourhood, currentNeighborhood) {
  */
 function checkMaterial(tickedMaterials, currentMaterial) {
     if (currentMaterial) {
-         // format material.
+        // format material.
         var materialsArr = currentMaterial.split("; ");
         for (let i = 0; i < tickedMaterials.length; i++) {
             if (materialsArr.includes(tickedMaterials[i])) {
@@ -1121,14 +1121,15 @@ function addRemoveActiveItem(target, className) {
     if (!element) return;
     element.classList.remove(className);
 }
- 
+
 function applyRefocusOnBindings() {
     var clusterBounds = clusterMarkersGroup.getBounds();
     if (clusterBounds.isValid()) {
         map.fitBounds(clusterBounds, configMaps.boundsPadding);
     }
-    
+
 }
+
 function closeSidebar() {
     document.body.classList.remove("active-sidebar");
     const element = document.querySelector(".active-item");
@@ -1138,16 +1139,15 @@ function closeSidebar() {
     // activeContent.classList.remove("active-content");
 }
 
-$('#short-sidebar-icon').on('click', function () {
+$('#short-sidebar-icon').on('click', function() {
     $('#sidebar').toggleClass('display-none');
     $('#short-sidebar').toggleClass('display-none');
     map.zoomOut(0.75);
 });
 
-$('#sidebar-icon').on('click', function () {
+$('#sidebar-icon').on('click', function() {
     $('#sidebar').toggleClass('display-none');
     $('#short-sidebar').toggleClass('display-none');
     map.zoomIn(0.75);
 });
 });
-
