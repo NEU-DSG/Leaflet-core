@@ -63,6 +63,7 @@ invokeGetBindingsApi().then(response => {
         bindings = reformatThebindings(response["results"]["bindings"]);
         // Finally create markers on the map.
         generateMarkersOnMap(Object.assign([], bindings));
+        applyRefocusOnBindings();
     }
 }).catch(err => {
     // Error handling in case api failure.
@@ -660,6 +661,7 @@ function generateMarkersOnMap(jsonData) {
                  updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
                  resetTheFilters(yearInstalled, categories, neighborhoods, materials);
                  filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+                 applyRefocusOnBindings();
              }
          }
     }
@@ -1149,7 +1151,13 @@ document.addEventListener("click", (e) => {
 
 // --------------------------------------------------
 // close sidebar
-
+function applyRefocusOnBindings() {
+    var clusterBounds = clusterMarkersGroup.getBounds();
+    if (clusterBounds.isValid()) {
+        map.fitBounds(clusterBounds, configMaps.boundsPadding);
+    }
+    
+}
 function closeSidebar() {
     document.body.classList.remove("active-sidebar");
     const element = document.querySelector(".active-item");
@@ -1158,7 +1166,6 @@ function closeSidebar() {
     element.classList.remove("active-item");
     // activeContent.classList.remove("active-content");
 }
-
 
 $('#short-sidebar-icon').on('click', function () {
     // console.log(map)
