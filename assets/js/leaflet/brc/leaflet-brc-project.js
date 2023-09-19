@@ -632,7 +632,7 @@ function generateMarkersOnMap(jsonData) {
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
-    function searchForBindings() {
+    function searchForBindings(resetFlag) {
          // get searched value.
          var searchText = document.getElementById("search-box-input").value;
          var searchedBindings = [];
@@ -643,6 +643,7 @@ function generateMarkersOnMap(jsonData) {
          };
          // clear the markers and Update the map pins with the searched text from the user.
          if (searchText && bindings && bindings.length > 0) {
+            if(resetFlag == false) {
              // fuse is used to search with different options based on the JSON fields.
              const fuse = new Fuse(bindings, options);
              // seach api to set the cofiguration.
@@ -657,22 +658,29 @@ function generateMarkersOnMap(jsonData) {
                      }
                  });
                  searchBindings = searchedBindings;
-                  // update the count and filters data.
-                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
-                 resetTheFilters(yearInstalled, categories, neighborhoods, materials);
-                 filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
-                 applyRefocusOnBindings();
+            } 
              }
+            else {
+                searchBindings = [];
+            }
+                // update the count and filters data.
+                updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+                resetTheFilters(yearInstalled, categories, neighborhoods, materials);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+                applyRefocusOnBindings();
          }
     }
     // filter search click event handler.
     document.getElementById('filters-search').addEventListener('click', (e) => {
-        searchForBindings();
+        searchForBindings(false);
+    });
+    document.getElementById('reset-button').addEventListener('click', (e) => {
+        searchForBindings(true);
     });
     $('#search-box-input').keypress(function(event){
         var keycode = (event.keyCode ? event.keyCode : event.which);
         if(keycode == '13'){
-            searchForBindings();
+            searchForBindings(false);
         }
     });
 
@@ -1102,21 +1110,9 @@ menuItems.forEach((item) => {
         ) {
             document.body.classList.toggle("active-sidebar");
         }
-
-              // show content
-        // showContent(target.dataset.item);
-        // add active class to menu item
-        // document.
-
         addRemoveActiveItem(target, "active-item");
     });
 });
-
-// close sidebar when click on close button
-// buttonClose.addEventListener("click", () => {
-//     // close the filter on left hand.
-//     closeSidebar();
-// });
 
 // remove active class from menu item and content
 function addRemoveActiveItem(target, className) {
@@ -1125,32 +1121,7 @@ function addRemoveActiveItem(target, className) {
     if (!element) return;
     element.classList.remove(className);
 }
-
-// show specific content
-function showContent(dataContent) {
-    const idItem = document.querySelector(`#${dataContent}`);
-    // show the content.
-    addRemoveActiveItem(idItem, "active-content");
-}
-
-// --------------------------------------------------
-// close when click esc
-document.addEventListener("keydown", function(event) {
-    // if pressed key is escape then close the side bar.
-    if (event.key === "Escape") {
-        closeSidebar();
-    }
-});
-
-// close sidebar when click outside
-document.addEventListener("click", (e) => {
-    // if (!e.target.closest(".sidebar")) {
-    //     closeSidebar();
-    // }
-});
-
-// --------------------------------------------------
-// close sidebar
+ 
 function applyRefocusOnBindings() {
     var clusterBounds = clusterMarkersGroup.getBounds();
     if (clusterBounds.isValid()) {
@@ -1168,14 +1139,12 @@ function closeSidebar() {
 }
 
 $('#short-sidebar-icon').on('click', function () {
-    // console.log(map)
     $('#sidebar').toggleClass('display-none');
     $('#short-sidebar').toggleClass('display-none');
     map.zoomOut(0.75);
 });
 
 $('#sidebar-icon').on('click', function () {
-    // console.log(map)
     $('#sidebar').toggleClass('display-none');
     $('#short-sidebar').toggleClass('display-none');
     map.zoomIn(0.75);
