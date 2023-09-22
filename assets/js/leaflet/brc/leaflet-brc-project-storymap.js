@@ -239,30 +239,27 @@ function createStoryMaps(layer, feature, jsonData) {
     currentAreaBottom = currentAreaTop + $('div#container' + feature.properties['id']).height();
     $('div#contents').scroll(function() {
         if ($(this).scrollTop() >= currentAreaTop && $(this).scrollTop() < currentAreaBottom) {
-            if (feature.properties['id'] != currentBox) {
-                currentBox = feature.properties['id'];
-                $('.image-container').removeClass("inFocus").addClass("outFocus");
-                $('div#container' + feature.properties['id']).addClass("inFocus").removeClass("outFocus");
-                // This adds another data layer
-                markActiveColor(feature.properties['id']);
-                refreshLayer(jsonData, map, feature.geometry['coordinates'], null);
-            }
+            currentBox = feature.properties['id'];
+            $('.image-container').removeClass("inFocus").addClass("outFocus");
+            $('div#container' + feature.properties['id']).addClass("inFocus").removeClass("outFocus");
+            // This adds another data layer
+            markActiveColor(feature.properties['id'], layer);
+            refreshLayer(jsonData, map, feature.geometry['coordinates'], null);
         }
     });
 }
 
-var markActiveColor = function(id) {
+var markActiveColor = function(id, mainLayer) {
     geoJsonObj.eachLayer(function(layer) {
         if (layer && layer._icon) {
-            layer._icon.src = configStoryMap.iconUrl;
-            if (layer["feature"]["properties"]["id"] == id) {
-              /* Adds marker-active class, which is orange, to marker k */
-              layer._icon.src = configStoryMap.redIconURL;
+            if (layer == mainLayer) {
+                mainLayer._icon.src = configStoryMap.redIconURL;
+            } else {
+                layer._icon.src = configStoryMap.iconUrl;
             }
           }
       });
   }
-
 
   // This adds data as a new layer to the map
 function refreshLayer(data, map, coord, zoom) {
