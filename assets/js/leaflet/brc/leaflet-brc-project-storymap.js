@@ -22,6 +22,7 @@ var baseMaps = {
 
 var layerControl = L.control.layers(baseMaps).addTo(map);
 
+var geoJsonObj = [];
 // Handle the promise for the wikidata api resquest.
 invokeGetBindingsApi().then(response => {
     // check weather the response has valid bindings field.
@@ -131,6 +132,61 @@ function createPopUpHtmlForBinding(binding, imagFlag = true) {
 }
 
 /***
+ *  Generated the markers on the leaflet map.
+ * 
+ * @param {Object} jsonData - the total geojson data.
+ */
+function generateMarkersOnMap(jsonData) {
+    // wicket(Wkt) is a library which can parse
+    // the WKTliteral (geometry data) and convert to geoJson information. 
+    var wkt = new Wkt.Wkt();
+    // converting bindings information to the geojson format.
+    var i = 1;
+    jsonData["features"].forEach(binding => {
+        if (binding && Object.keys(jsonData).length > 0) {
+            if (binding.hasOwnProperty("properties")) {
+                binding["geometry"] = Object.assign({}, wkt.read(binding["properties"]["coords"]).toJson());
+                binding["properties"]["id"] = i++;
+                delete binding["properties"]["coords"];
+            }
+        }
+    });
+    var scrollPosition = 0;
+    // This watches for the scrollable container
+    $('div#contents').scroll(function() {
+        scrollPosition = $(this).scrollTop();
+    });
+
+    // creating point to the map using geoJson function from the leaflet js.
+    geoJsonObj = L.geoJSON(jsonData, {
+            pointToLayer: function(geoJsonPoint, latlng) {
+                const myIcon = L.icon({
+                    iconUrl: configStoryMap.iconUrl,
+                    shadowUrl: configStoryMap.shadowUrl,
+                    iconSize: configStoryMap.iconSize,
+                    iconAnchor: configStoryMap.iconAnchor,
+                    popupAnchor: configStoryMap.popupAnchor,
+                    shadowSize: configStoryMap.shadowSize
+                });
+                return L.marker(latlng, {
+                    icon: myIcon
+                });
+            },
+            onEachFeature: function(feature, layer) {
+                let popUpHtml = createPopUpHtmlForBinding(feature["properties"]);
+                layer.bindPopup(popUpHtml);
+                createStoryMaps(layer, feature, jsonData);
+            }
+        })
+        .addTo(map);
+    $('#contents').append("<div class='space-at-the-bottom'><a href='#space-at-the-top'><i class='fa fa-chevron-up'></i></br><small>Top</small></a></div>");
+    if (geoJsonObj.getBounds().isValid()) {
+        map.fitBounds(geoJsonObj.getBounds(), {
+            padding: configStoryMap.boundsPadding
+        });
+    }
+}
+/***
  *  Creates the story maps based on the bindings.
  * 
  * @param {Object} layer - the current layer object.
@@ -188,79 +244,27 @@ function createStoryMaps(layer, feature, jsonData) {
                 $('.image-container').removeClass("inFocus").addClass("outFocus");
                 $('div#container' + feature.properties['id']).addClass("inFocus").removeClass("outFocus");
                 // This adds another data layer
+                markActiveColor(feature.properties['id']);
                 refreshLayer(jsonData, map, feature.geometry['coordinates'], null);
             }
         }
     });
 }
 
-/***
- *  Generated the markers on the leaflet map.
- * 
- * @param {Object} jsonData - the total geojson data.
- */
-function generateMarkersOnMap(jsonData) {
-    // wicket(Wkt) is a library which can parse
-    // the WKTliteral (geometry data) and convert to geoJson information. 
-    var wkt = new Wkt.Wkt();
-    // converting bindings information to the geojson format.
-    var i = 1;
-    jsonData["features"].forEach(binding => {
-        if (binding && Object.keys(jsonData).length > 0) {
-            if (binding.hasOwnProperty("properties")) {
-                binding["geometry"] = Object.assign({}, wkt.read(binding["properties"]["coords"]).toJson());
-                binding["properties"]["id"] = i++;
-                delete binding["properties"]["coords"];
+var markActiveColor = function(id) {
+    geoJsonObj.eachLayer(function(layer) {
+        if (layer && layer._icon) {
+            layer._icon.src = configStoryMap.iconUrl;
+            if (layer["feature"]["properties"]["id"] == id) {
+              /* Adds marker-active class, which is orange, to marker k */
+              layer._icon.src = configStoryMap.redIconURL;
             }
-        }
-    });
-    var scrollPosition = 0;
-    // This watches for the scrollable container
-    $('div#contents').scroll(function() {
-        scrollPosition = $(this).scrollTop();
-    });
+          }
+      });
+  }
 
-    // creating point to the map using geoJson function from the leaflet js.
-    const geoJsonObj = L.geoJSON(jsonData, {
-            pointToLayer: function(geoJsonPoint, latlng) {
-                const myIcon = L.icon({
-                    iconUrl: configStoryMap.iconUrl,
-                    iconSize: configStoryMap.iconSize,
-                    iconAnchor: configStoryMap.iconAnchor,
-                    popupAnchor: configStoryMap.popupAnchor,
-                });
-                return L.marker(latlng, {
-                    icon: myIcon
-                });
-            },
-            onEachFeature: function(feature, layer) {
-                let popUpHtml = createPopUpHtmlForBinding(feature["properties"]);
-                layer.bindPopup(popUpHtml);
-                createStoryMaps(layer, feature, jsonData);
-            }
-        })
-        .addTo(map);
-    $('#contents').append("<div class='space-at-the-bottom'><a href='#space-at-the-top'><i class='fa fa-chevron-up'></i></br><small>Top</small></a></div>");
-    if (geoJsonObj.getBounds().isValid()) {
-        map.fitBounds(geoJsonObj.getBounds(), {
-            padding: configStoryMap.boundsPadding
-        });
-    }
-    // if (!geoJsonObj.getBounds().isValid()) {
-    //     // Define the bounds for the Boston area
-    //     var southWest = L.latLng(42.22788, -71.19179); // Bottom-left corner of the bounding box
-    //     var northEast = L.latLng(42.39629, -70.98622); // Top-right corner of the bounding box
-    //     var bounds = L.latLngBounds(southWest, northEast);
-    //     // Set the maximum bounds for the map to restrict it to the Boston area
-    //     map.fitBounds(bounds);
-    //     map.setZoom(map.getZoom() + 1); 
-    // } else {
-    //     map.fitBounds(geoJsonObj.getBounds(), {
-    //         padding: configStoryMap.boundsPadding
-    //     });
-    // }
-}
-// This adds data as a new layer to the map
+
+  // This adds data as a new layer to the map
 function refreshLayer(data, map, coord, zoom) {
     // var dataLayer = L.geoJson(data);
     // dataLayer.addTo(map);
