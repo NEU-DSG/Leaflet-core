@@ -163,7 +163,7 @@ body {
 #art-category-section,
 #neighbourhood-category-section,
 #material-category-section {
-    height: 200px;
+    max-height: 200px;
     overflow: auto;
 }
 
@@ -724,4 +724,8 @@ svg:not(:root) {
 
 .fs-0p8 {
     font-size: 0.8em;
+}
+
+.text-dark-blue {
+    color: darkblue;
 }
