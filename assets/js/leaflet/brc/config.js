@@ -169,5 +169,20 @@ const configStoryMap = {
                                                 ?commemorates rdfs:label ?commemoratesLabel.
                                                 }
                         } group by ?work ?workDescription ?workLabel ?coords ?address`,
+    subStoryMapCollections: {
+        "collection1": {
+            "description": "Home",
+            "data":[]
+        },
+        "collection2": {
+            "description":"45 Forsyth St",
+            "data":["http://www.wikidata.org/entity/Q118105014", "http://www.wikidata.org/entity/Q118104991", "http://www.wikidata.org/entity/Q117225339", "http://www.wikidata.org/entity/Q117472504"]
+        },
+        "collection3": {
+            "description": "40 Smith Street",
+            "data":["http://www.wikidata.org/entity/Q110088879", "http://www.wikidata.org/entity/Q110088862", "http://www.wikidata.org/entity/Q107975711", "http://www.wikidata.org/entity/Q110088867"]
+        }
+        
+    }
 }
 

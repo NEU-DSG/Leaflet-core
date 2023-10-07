@@ -19,7 +19,7 @@ body {
     min-width: 300px;
     right: 0px;
     height: 100vh;
-    overflow: auto;
+    /* overflow: auto; */
     z-index: 99;
     background: rgba(254,254,254, 1.0); /* to apply opacity background only. */
 }
@@ -28,7 +28,7 @@ body {
 #contents {
     padding: 0%;
     width: 100%;
-    margin-top: 0px; /*Adjust if Title header needs more space */
+    margin-top: 42px; /*Adjust if Title header needs more space */
     height: 100%; /* Adjust to fit max Description length, one setting for all; alternative is 100% */
     overflow-y: scroll;
     overflow-x: hidden;
@@ -74,7 +74,7 @@ h3 {
 .image-container {
     /* margin + padding = imageContainerMargin in script.js */
     /* Important for scrolling! */
-    margin: 50px 0 0 0;
+    /* margin: 50px 0 0 0; */
     padding: 20px 0 0 0;
     text-align: center;
 }

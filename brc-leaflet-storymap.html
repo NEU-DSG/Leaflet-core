@@ -4,6 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
   <title>Leaflet Storymap</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.0-rc.2/dist/leaflet.css"/>
   <link rel="stylesheet" href="./assets/css/leaflet/brc/leaflet-brc-project-storymap.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
@@ -12,31 +13,38 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/wicket/1.3.8/wicket.min.js" integrity="sha512-aaiN+QIXD0N9Id865vSDEfttZJV9v8ZGh7jXMnYI2zbZhkSYOulS4IH0u4pC61/KXT20UedYzL5xi5siIg6mlw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script type="text/javascript" src="./assets/js/leaflet/brc/config.js"></script>
   <script type="text/javascript" src="./assets/js/leaflet/brc/common.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 </head>
 
 <body>
   <div id="title" class="title-text">
-    <h3>Leaflet StoryMap</h3>
-    <small>Scroll <i class="fa fa-chevron-down"></i></small>
+     <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Home</button>
+          <button class="nav-link" id="nav-forsyth-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">45 Forsyth St</button>
+          <button class="nav-link" id="nav-smith-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">40 Smith Street</button>
+        </div>
   </div>
+  
   <div id="narration">
-    <div id="contents">
-      <div id="space-at-the-top" class="space-at-the-top"></div>
-    </div>
+      <div id="contents">
+      </div>
   </div>
   <div id="map"></div>
   <!-- handlebars template for each individual story -->
   <script type="text/javascript" src="./assets/js/leaflet/brc/leaflet-brc-project-storymap.js"></script>
-  <script id="container-template" type="text/x-handlebars-template">
-    <div id="{{containerId}}" class="image-container">
-      <p class="chapter-header">{{chapter}}</p>
-      <div class="img-holder">
-        <img src="{{imgSrc}}">
+  <!-- <script id="container-template" type="text/x-handlebars-template">
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+        <div id="{{containerId}}" class="image-container">
+          <p class="chapter-header">{{chapter}}</p>
+          <div class="img-holder">
+            <img src="{{imgSrc}}">
+          </div>
+          <a href="{{srcHref}}" target="_blank" class="source">{{srcText}}</a>
+          <p class="description">{{{description}}}</p>
+        </div>
       </div>
-      <a href="{{srcHref}}" target="_blank" class="source">{{srcText}}</a>
-      <p class="description">{{{description}}}</p>
     </div>
-  </script>
-
+  </script> -->
 </body>
 </html>

@@ -21,8 +21,8 @@ var baseMaps = {
 };
 
 var layerControl = L.control.layers(baseMaps).addTo(map);
-
 var geoJsonObj = [];
+var geoJsonData = [];
 // Handle the promise for the wikidata api resquest.
 invokeGetBindingsApi().then(response => {
     // check weather the response has valid bindings field.
@@ -30,7 +30,7 @@ invokeGetBindingsApi().then(response => {
         // Take the bindings as a parameter and format the bindings.
         var bindings = reformatThebindings(response["results"]["bindings"]);
         // convert the bindings to geojson object.
-        var geoJsonData = convertJsontoGeojson(bindings);
+        geoJsonData = convertJsontoGeojson(bindings);
 
         // check for filters from the map.
         geoJsonData = checkforFilters(geoJsonData);
@@ -43,18 +43,23 @@ invokeGetBindingsApi().then(response => {
     console.log("Some error happened with the api", err);
 });
 
-function checkforFilters(geoJsonData) {
+function checkforFilters(jsonData) {
     if (localStorage.getItem("properties")) {
         const properties = JSON.parse(localStorage.getItem("properties"));
         if (properties.hasOwnProperty("filteredData")) {
             const filterDataArr = properties["filteredData"]
-            geoJsonData["features"] = geoJsonData["features"].filter((binding) => {
-                return filterDataArr.includes(binding["properties"]["work"]);
-            })
+            geoJsonsData = filterDataBasedOnURI(jsonData, filterDataArr)
         }
         localStorage.setItem("properties", JSON.stringify({}))
     }
-    return geoJsonData;
+    return jsonData;
+}
+
+function filterDataBasedOnURI(jsonData, uris) {
+    jsonData["features"] = jsonData["features"].filter((binding) => {
+        return uris.includes(binding["properties"]["work"]);
+    })
+    return jsonData;
 }
 /***
  * Convert the bindings from json to geojson.
@@ -147,7 +152,7 @@ function generateMarkersOnMap(jsonData) {
             if (binding.hasOwnProperty("properties")) {
                 binding["geometry"] = Object.assign({}, wkt.read(binding["properties"]["coords"]).toJson());
                 binding["properties"]["id"] = i++;
-                delete binding["properties"]["coords"];
+                // delete binding["properties"]["coords"];
             }
         }
     });
@@ -270,4 +275,24 @@ function refreshLayer(data, map, coord, zoom) {
 $("div#contents").animate({
     scrollTop: configStoryMap.animateScrollTop
 });
+function swithToSubStoryMap(tabName) {
+    filterdGeoJsonData = structuredClone(geoJsonData);
+    filterdBindings = filterDataBasedOnURI(filterdGeoJsonData, configStoryMap.subStoryMapCollections[tabName].data);
+    geoJsonObj.clearLayers();
+    $('div#contents').empty();
+    generateMarkersOnMap(filterdBindings);
+}
+
+document.getElementById('nav-home-tab').addEventListener('click', (e) => {
+    geoJsonObj.clearLayers();
+    $('div#contents').empty();
+    generateMarkersOnMap(geoJsonData);
+});
+document.getElementById('nav-forsyth-tab').addEventListener('click', (e) => {
+    swithToSubStoryMap('collection2');
+});
+document.getElementById('nav-smith-tab').addEventListener('click', (e) => {
+    swithToSubStoryMap('collection3');
+});
+
 });
