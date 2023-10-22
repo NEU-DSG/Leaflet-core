@@ -1,0 +1,165 @@
+<!-- Index page for the example leaflet-brc project.-->
+<!DOCTYPE html>
+<html lang="en">
+   <!-- Head section starts -->
+   <head>
+      <title>Neighborhood Public Art in Boston</title>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.0-rc.2/dist/leaflet.css"/>
+      <link rel="stylesheet" type="text/css" href="./assets/css/leaflet/brc/leaflet-brc-project.css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" integrity="sha512-ENrTWqddXrLJsQS2A86QmvA17PkJ0GVm1bqj5aTgpeMAfDKN2+SIOLpKG8R/6KkimnhTb+VW5qqUHB/r1zaRgg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" integrity="sha512-fYyZwU1wU0QWB4Yutd/Pvhy5J1oWAwFXun1pt+Bps04WSe4Aq6tyHlT4+MHSJhD8JlLfgLuC4CbCnX5KHSjyCg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+      <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
+      <script src="https://unpkg.com/leaflet@1.0.0-rc.2/dist/leaflet.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/wicket/1.3.8/wicket.min.js" integrity="sha512-aaiN+QIXD0N9Id865vSDEfttZJV9v8ZGh7jXMnYI2zbZhkSYOulS4IH0u4pC61/KXT20UedYzL5xi5siIg6mlw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js" integrity="sha512-OFs3W4DIZ5ZkrDhBFtsCP6JXtMEDGmhl0QPlmWYBJay40TT1n3gt2Xuw8Pf/iezgW9CdabjkNChRqozl/YADmg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+      <script type="text/javascript" src="./assets/js/leaflet/brc/bostonboundaries.js"></script>
+      <script type="text/javascript" src="./assets/js/leaflet/brc/leafet-plugin-mask.js"></script>
+      <script type="text/javascript" src="./assets/js/leaflet/brc/leaflet-boundary-canvas.js"></script>
+      <script type="text/javascript" src="./assets/js/leaflet/brc/leaflet-plugin-geolet.js"></script>
+      <script type="text/javascript" src="./assets/js/leaflet/brc/config.js"></script>
+      <script type="text/javascript" src="./assets/js/leaflet/brc/common.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+   </head>
+   <!-- Body section starts -->
+   <body>
+      <!-- Modal -->
+         <div class="modal" id="no-search-item-modal" tabindex="-1" data-backdrop="true" aria-labelledby="no-search-item-modal-label" aria-hidden="true" style="display: none;">
+            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="no-search-item-modal-label">Notification</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <p>No items found for the search</p>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+               </div>
+            </div>
+            </div>
+         </div>
+      <div class="d-flex">
+         <!-- As a link -->
+         <nav class="navbar bg-body-tertiary">
+            <div class="container-fluid">
+               <a class="navbar-brand fw-bold" href="#">Neighborhood Public Art in Boston</a>
+            </div>
+         </nav>
+      </div>
+      <!-- The main body container to hold filter and map -->
+      <div class="d-flex flex-row">
+        <div class="flex-shrink-0 p-2 bg-white border" style="height: 94vh;" id="short-sidebar">
+            <a href="#" class="link-dark d-inline-flex text-decoration-none rounded" id="short-sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-list text-black" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+              </svg>
+            </a>
+        </div>
+         <!-- Side bar section starts -->
+         <div class="flex-shrink-0 p-3 bg-white display-none border overflow-auto" style="height: 94vh;" id="sidebar">
+            <div class="d-flex justify-content-between align-items-center">  
+                <span class="fs-5 fw-semibold">Filters</span>
+                <a href="#" class="link-dark d-inline-flex text-decoration-none rounded" id="sidebar-icon">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-lg text-black" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+              </svg>
+            </a>
+            </div>
+               <hr class="hr" />
+               <div class="d-flex flex-column">
+                  <div class="mb-3">
+                     <button type="button" class="btn btn-dark" id="reset-button">Reset</button>
+                  </div>
+                  <div class="input-group">
+                     <input type="text" id="search-box-input" class="form-control" placeholder="Search">
+                     <button class="btn btn-primary" id="filters-search" type="button">Search</button>
+                  </div>
+                  <label for="search-box-input" class="form-label mb-3 fs-0p8">Searches all facets</label>
+                  <!-- <div class="row align-items-center">
+                     <span class="col-3 fw-bold">Radius:</span>
+                     <div class="col-9">
+                        <select class="form-select" aria-label="Default select example" id="distance-select">
+                           <option value="0.25" selected>0.25 miles</option>
+                           <option value="0.50">0.50 miles</option>
+                           <option value="0.75">0.75 miles</option>
+                           <option value="1.0">1.0 miles</option>
+                        </select>
+                     </div>
+                  </div> -->
+               </div>
+               <hr class="hr" />
+               <ul class="list-unstyled ps-0">
+                  <li class="mb-1">
+                     <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 collapsed" data-bs-toggle="collapse" data-bs-target="#installation-date-collapse" aria-expanded="false">
+                     Installation date
+                     </button>
+                     <div class="collapse ptb-5" id="installation-date-collapse">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small" id="date-facet-section">
+                           <li>
+                              <div>
+                                 <input class="form-check-input" type="checkbox" value="" id="date-selectall" checked>
+                                 <label class="form-check-label pl-4" for="date-selectall">(Select All)</label>
+                              </div>
+                           </li>
+                        </ul>
+                     </div>
+                  </li>
+                  <li class="mb-1">
+                     <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 collapsed" data-bs-toggle="collapse" data-bs-target="#artwork-collapse" aria-expanded="false">
+                     Type of artwork
+                     </button>
+                     <div class="collapse ptb-5" id="artwork-collapse">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small" id="art-category-section">
+                           <li>
+                              <div>
+                                 <input class="form-check-input" type="checkbox" value="" id="category-selectall" checked>
+                                 <label class="form-check-label pl-4" for="category-selectall">(Select All)</label>
+                              </div>
+                           </li>
+                        </ul>
+                     </div>
+                  </li>
+                  <li class="mb-1">
+                     <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 collapsed" data-bs-toggle="collapse" data-bs-target="#neighborhood-collapse" aria-expanded="false">
+                     Neighborhood
+                     </button>
+                     <div class="collapse ptb-5" id="neighborhood-collapse">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small" id="neighbourhood-category-section">
+                           <li>
+                              <div>
+                                 <input class="form-check-input" type="checkbox" value="" id="neighborhood-selectall" checked>
+                                 <label class="form-check-label pl-4" for="neighborhood-selectall">(Select All)</label>
+                              </div>
+                           </li>
+                        </ul>
+                     </div>
+                  </li>
+                  <li class="mb-1">
+                     <button class="btn btn-toggle d-inline-flex align-items-center rounded border-0 collapsed" data-bs-toggle="collapse" data-bs-target="#material-collapse" aria-expanded="false">
+                     Material
+                     </button>
+                     <div class="collapse ptb-5" id="material-collapse">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small" id="material-category-section">
+                           <li>
+                              <div>
+                                 <input class="form-check-input" type="checkbox" value="" id="material-selectall" checked>
+                                 <label class="form-check-label pl-4" for="material-selectall">(Select All)</label>
+                              </div>
+                           </li>
+                        </ul>
+                     </div>
+                  </li>
+               </ul>
+         </div>
+         <!-- Main map div container -->
+         <div class="border" id="map"></div>
+      </div>
+      </div>
+      <script type="text/javascript" src="./assets/js/leaflet/brc/leaflet-brc-project.js"></script>
+   </body>
+</html>
