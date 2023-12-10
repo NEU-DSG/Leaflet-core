@@ -493,15 +493,15 @@ function generateMarkersOnMap(jsonData) {
         var id = "d" + year;
         if (!document.getElementById(id)) {
             // html string used to show the items in the year installed section.
-            var htmlString = "<li><div><input class='form-check-input' type='checkbox' id ='" +
-                id + "' name='" + id + "'" + "checked>" + "<label class='form-check-label pl-4' for = '" + id + "'> " + year + " (" + count + ")" + "</label></div></li>";
+            var htmlString = "<li><div><a class='text-decoration-none text-dark-blue' href='#' id ='" +
+                id + "' >" + year + " (" + count + ")" + "</a></div></li>";
             // insert the html string to the div section.
             document.getElementById("date-facet-section").insertAdjacentHTML('beforeend', htmlString);
             // adding the change event listener to the checkboxes.
-            document.getElementById(id).addEventListener('change', (e) => {
+            document.getElementById(id).addEventListener('click', (e) => {
                 // when there is a change update the filters data.
                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true, 'year', id);
             })
         }
     });
@@ -511,16 +511,15 @@ function generateMarkersOnMap(jsonData) {
         var id = currentCategory.replace("; ", "-");
         if (!document.getElementById(id)) {
             // html string used to show the items in the categories section.
-            var htmlString = "<li><div><input class='form-check-input' type='checkbox' id ='" +
-                id + "' name='" + id + "'" + "checked>" + "<label class='form-check-label pl-4' for = '" + id + "'> " + currentCategory + " (" + count + ")" +
-                "</label></div></li>";
+            var htmlString = "<li><div><a class='text-decoration-none text-dark-blue' href='#' id ='" +
+            id + "' >" + currentCategory + " (" + count + ")" + "</a></div></li>";
             // insert the html string to the div section. 
             document.getElementById("art-category-section").insertAdjacentHTML('beforeend', htmlString);
             // adding the change event listener to the checkboxes.
-            document.getElementById(id).addEventListener('change', (e) => {
+            document.getElementById(id).addEventListener('click', (e) => {
                 // when there is a change update the filters data.
                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true, 'categories', id);
             })
         }
     });
@@ -530,15 +529,15 @@ function generateMarkersOnMap(jsonData) {
         var id = neighborhood.replace("; ", "-");
         if (!document.getElementById(id)) {
             // html string used to show the items in the neighborhoods section.
-            var htmlString = "<li><div><input class='form-check-input' type='checkbox' id ='" +
-                id + "' name='" + id + "'" + "checked>" + "<label class='form-check-label pl-4' for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label></div></li>";
+            var htmlString = "<li><div><a class='text-decoration-none text-dark-blue' href='#' id ='" +
+            id + "' >" + neighborhood + " (" + count + ")" + "</a></div></li>";
             // insert the html string to the div section.
             document.getElementById("neighbourhood-category-section").insertAdjacentHTML('beforeend', htmlString);
             // adding the change event listener to the checkboxes.
-            document.getElementById(id).addEventListener('change', (e) => {
+            document.getElementById(id).addEventListener('click', (e) => {
                 // when there is a change update the filters data.
                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true, 'neighborhood', id);
             })
         }
     });
@@ -548,15 +547,15 @@ function generateMarkersOnMap(jsonData) {
         var id = material.replace("; ", "-");
         if (!document.getElementById(id)) {
             // html string used to show the items in the materials section.
-            var htmlString = "<li><div><input class='form-check-input' type='checkbox' id ='" +
-                id + "' name='" + id + "'" + "checked>" + "<label class='form-check-label pl-4' for = '" + id + "'> " + material + " (" + count + ")" + "</label></div></li>";
+            var htmlString = "<li><div><a class='text-decoration-none text-dark-blue' href='#' id ='" +
+            id + "' >" + material + " (" + count + ")" + "</a></div></li>";
             // insert the html string to the div section.
             document.getElementById("material-category-section").insertAdjacentHTML('beforeend', htmlString);
             // adding the change event listener to the checkboxes.
-            document.getElementById(id).addEventListener('change', (e) => {
+            document.getElementById(id).addEventListener('click', (e) => {
                 // when there is a change update the filters data.
                 updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
-                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+                filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true,'materials', id);
             })
         }
     });
@@ -643,8 +642,7 @@ function generateMarkersOnMap(jsonData) {
             keys: configMaps.fuseKeys
         };
         // clear the markers and Update the map pins with the searched text from the user.
-        if (searchText && bindings && bindings.length > 0) {
-            if (resetFlag == false) {
+            if (resetFlag == false && searchText && bindings && bindings.length > 0) {
                 // fuse is used to search with different options based on the JSON fields.
                 const fuse = new Fuse(bindings, options);
                 // seach api to set the cofiguration.
@@ -668,7 +666,6 @@ function generateMarkersOnMap(jsonData) {
             resetTheFilters(yearInstalled, categories, neighborhoods, materials);
             filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
             applyRefocusOnBindings();
-        }
     }
     // filter search click event handler.
     document.getElementById('filters-search').addEventListener('click', (e) => {
@@ -684,21 +681,21 @@ function generateMarkersOnMap(jsonData) {
         }
     });
 
-    // change event listener for the distance dropdown.
-    document.getElementById('distance-select').addEventListener('change', (e) => {
-        var value = e.target.options[e.target.selectedIndex].value;
-        if (value == "0.25") {
-            zoomLevel = 23;
-        } else if (value == "0.50") {
-            zoomLevel = 17;
-        } else if (value == "0.75") {
-            zoomLevel = 16;
-        } else {
-            zoomLevel = 15;
-        }
-        // geolocate the user base on the above zoom levels.
-        geolet.activate();
-    });
+    // // change event listener for the distance dropdown.
+    // document.getElementById('distance-select').addEventListener('change', (e) => {
+    //     var value = e.target.options[e.target.selectedIndex].value;
+    //     if (value == "0.25") {
+    //         zoomLevel = 23;
+    //     } else if (value == "0.50") {
+    //         zoomLevel = 17;
+    //     } else if (value == "0.75") {
+    //         zoomLevel = 16;
+    //     } else {
+    //         zoomLevel = 15;
+    //     }
+    //     // geolocate the user base on the above zoom levels.
+    //     geolet.activate();
+    // });
 }
 
 /**
@@ -722,31 +719,43 @@ function getCoordinates(binding) {
 function resetTheFilters(yearInstalled, categories, neighborhoods, materials) {
     yearInstalled.forEach((count, year) => {
         var id = "d" + year;
-        document.getElementById(id).checked = true;
+        const yearAnchor = document.getElementById(id);
+        if (yearAnchor) {
+            yearAnchor.classList.remove('display-none');
+        }
     });
-    document.getElementById('date-selectall').checked = true;
+    // document.getElementById('date-selectall').checked = true;
     categories.forEach((count, currentCategory) => {
         var id = currentCategory.replace("; ", "-");
-        document.getElementById(id).checked = true;
+        const categoryAnchor = document.getElementById(id);
+        if (categoryAnchor) {
+            categoryAnchor.classList.remove('display-none');
+        }
     });
-    document.getElementById('category-selectall').checked = true;
+    // document.getElementById('category-selectall').checked = true;
     neighborhoods.forEach((count, neighborhood) => {
         var id = neighborhood.replace("; ", "-");
-        document.getElementById(id).checked = true;
+        const neighborhoodAnchor = document.getElementById(id);
+        if (neighborhoodAnchor) {
+            neighborhoodAnchor.classList.remove('display-none');
+        }
     });
-    document.getElementById('neighborhood-selectall').checked = true;
+    // document.getElementById('neighborhood-selectall').checked = true;
     materials.forEach((count, material) => {
         var id = material.replace("; ", "-");
-        document.getElementById(id).checked = true;
+        const materialAnchor = document.getElementById(id);
+        if (materialAnchor) {
+            materialAnchor.classList.remove('display-none');
+        }
     });
-    document.getElementById('material-selectall').checked = true;
+    // document.getElementById('material-selectall').checked = true;
 }
 /**
  * Filters the markers available on the map.
  * 
  * 
  */
-function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, searchFlag) {
+function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, searchFlag, filterType, current_id) {
     var filterBindings = [];
     // check if the method is called from search or while filtering the data.
     if (searchBindings.length > 0) {
@@ -765,35 +774,62 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
     // iterate through yearInstalled and add all the checkboxes that are checked.
     yearInstalled.forEach((count, year) => {
         var id = "d" + year;
-        if (document.getElementById(id).checked) {
-            tickedRanges.push(year);
+        const anchorTag = document.getElementById(id)
+        if (anchorTag && !anchorTag.classList.contains('display-none')) {
+            if(filterType == 'year') {
+                if(current_id == id) {
+                    tickedRanges.push(year);
+                }
+            } else {
+                tickedRanges.push(year);
+            }
         }
     });
 
     // iterate through categories and add all the checkboxes that are checked.
     categories.forEach((count, currentCategory) => {
         var id = currentCategory.replace("; ", "-");
-        if (document.getElementById(id).checked) {
-            tickedCategories.push(currentCategory);
+        const anchorTag = document.getElementById(id)
+        if (anchorTag && !anchorTag.classList.contains('display-none')) {
+            if(filterType == 'categories') {
+                if(current_id == id) {
+                    tickedCategories.push(currentCategory);
+                }
+            } else {
+                tickedCategories.push(currentCategory);
+            }
         }
     });
 
     // iterate through neighborhoods and add all the checkboxes that are checked.
     neighborhoods.forEach((count, neighborhood) => {
         var id = neighborhood.replace("; ", "-");
-        if (document.getElementById(id).checked) {
-            tickedNeighbourhood.push(neighborhood);
+        const anchorTag = document.getElementById(id)
+        if (anchorTag && !anchorTag.classList.contains('display-none')) {
+            if(filterType == 'neighborhood') {
+                if(current_id == id) {
+                    tickedNeighbourhood.push(neighborhood);
+                }
+            } else {
+                tickedNeighbourhood.push(neighborhood);
+            }
         }
     });
 
     // iterate through materials and add all the checkboxes that are checked.
     materials.forEach((count, material) => {
         var id = material.replace("; ", "-");
-        if (document.getElementById(id).checked) {
-            tickedMaterials.push(material);
+        const anchorTag = document.getElementById(id)
+        if (anchorTag && !anchorTag.classList.contains('display-none')) {
+            if(filterType == 'materials') {
+                if(current_id == id) {
+                    tickedMaterials.push(material);
+                }
+            } else {
+                tickedMaterials.push(material);
+            }
         }
     });
-
     // adding markers based on the user selected filters.
     filterBindings.forEach(binding => {
         var currentYear = null,
@@ -836,7 +872,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                         var currentYear = yearInstalled.get(yearRange);
                         var id = "d" + yearRange;
                         // update the year installed section in left side filters.
-                        if (document.getElementById(id).checked) {
+                        const anchorTag = document.getElementById(id)
+                        if (anchorTag && !anchorTag.classList.contains('display-none')) {
                             yearInstalled.set(yearRange, currentYear + 1);
                         }
                     });
@@ -846,7 +883,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                     var currentYear = yearInstalled.get(yearRange);
                     var id = "d" + yearRange;
                     // update the year installed section in left side filters.
-                    if (document.getElementById(id).checked) {
+                    const anchorTag = document.getElementById(id)
+                    if (anchorTag && !anchorTag.classList.contains('display-none')) {
                         yearInstalled.set(yearRange, currentYear + 1);
                     }
                 }
@@ -854,7 +892,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                 var currentYear = yearInstalled.get("NA");
                 var id = "d" + "NA";
                 // Unknown data for the year installed.
-                if (document.getElementById(id).checked) {
+                const anchorTag = document.getElementById(id)
+                if (anchorTag && !anchorTag.classList.contains('display-none')) {
                     yearInstalled.set("NA", currentYear + 1);
                 }
             }
@@ -866,7 +905,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                     // format category.
                     var id = binding["categories"].replace("; ", "-");
                     // update the categories section in left side filters.
-                    if (document.getElementById(id).checked) {
+                    const anchorTag = document.getElementById(id)
+                    if (anchorTag && !anchorTag.classList.contains('display-none')) {
                         categories.set(binding["categories"], currentCat + 1);
                     }
                 } else {
@@ -877,7 +917,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                         var currentCat = categories.get(cat);
                         var id = cat.replace("; ", "-");
                         // update the categories section in left side filters.
-                        if (document.getElementById(id).checked) {
+                        const anchorTag = document.getElementById(id)
+                        if (anchorTag && !anchorTag.classList.contains('display-none')) {
                             categories.set(cat, currentCat + 1);
                         }
                     });
@@ -891,7 +932,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                     // format neighbor.
                     var id = binding["neighborhoods"].replace("; ", "-");
                     // update the neighborhoods section in left side filters.
-                    if (document.getElementById(id).checked) {
+                    const anchorTag = document.getElementById(id)
+                    if (anchorTag && !anchorTag.classList.contains('display-none')) {
                         neighborhoods.set(binding["neighborhoods"], currentNeig + 1);
                     }
                 } else {
@@ -902,7 +944,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                         // format neighbor.
                         var id = neighbor.replace("; ", "-");
                         // update the neighborhoods section in left side filters.
-                        if (document.getElementById(id).checked) {
+                        const anchorTag = document.getElementById(id)
+                        if (anchorTag && !anchorTag.classList.contains('display-none')) {
                             neighborhoods.set(neighbor, currentNeig + 1);
                         }
                     });
@@ -915,7 +958,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                     // format material.
                     var id = binding["materials"].replace("; ", "-");
                     // update the materials section in left side filters.
-                    if (document.getElementById(id).checked) {
+                    const anchorTag = document.getElementById(id)
+                    if (anchorTag && !anchorTag.classList.contains('display-none')) {
                         materials.set(binding["materials"], currentMaterial + 1);
                     }
                 } else {
@@ -927,7 +971,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                         // format material.
                         var id = material.replace("; ", "-");
                         // update the materials section in left side filters.
-                        if (document.getElementById(id).checked) {
+                        const anchorTag = document.getElementById(id)
+                        if (anchorTag && !anchorTag.classList.contains('display-none')) {
                             materials.set(material, currentMaterial + 1);
                         }
                     });
@@ -936,7 +981,8 @@ function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, s
                 // Material data unknown case.
                 var currentMaterial = materials.get("NA");
                 var id = "NA";
-                if (document.getElementById(id).checked) {
+                const anchorTag = document.getElementById(id)
+                if (anchorTag && !anchorTag.classList.contains('display-none')) {
                     materials.set("NA", currentMaterial + 1);
                 }
             }
@@ -1064,33 +1110,57 @@ function updateTheCountLabels(yearInstalled, categories, neighborhoods, material
     // iterate through categories and change the html labels to the most updated count 
     categories.forEach((count, currentCategory) => {
         var id = currentCategory.replace("; ", "-");
-        var querySelect = "label[for='" + id + "']";
+        const categoryAnchor = document.getElementById(id);
         // change the inner html.
-        document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + currentCategory + " (" + count + ")" + "</label>";
+        if (categoryAnchor) {
+            if(count > 0) {
+                categoryAnchor.textContent = currentCategory + " (" + count + ")";
+            } else {
+                categoryAnchor.classList.add('display-none');
+            }
+        }
     });
 
     // iterate through neighborhoods and change the html labels to the most updated count 
     neighborhoods.forEach((count, neighborhood) => {
         var id = neighborhood.replace("; ", "-");
-        var querySelect = "label[for='" + id + "']";
+        const neighborhoodAnchor = document.getElementById(id);
         // change the inner html.
-        document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + neighborhood + " (" + count + ")" + "</label>";
+        if (neighborhoodAnchor) {
+            if(count > 0) {
+                neighborhoodAnchor.textContent = neighborhood + " (" + count + ")";
+            } else {
+                neighborhoodAnchor.classList.add('display-none');
+            }
+        }
     });
 
     // iterate through materials and change the html labels to the most updated count 
     materials.forEach((count, material) => {
         var id = material.replace("; ", "-");
-        var querySelect = "label[for='" + id + "']";
+        const materialAnchor = document.getElementById(id);
         // change the inner html.
-        document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + material + " (" + count + ")" + "</label>";
+        if (materialAnchor) {
+            if(count > 0) {
+                materialAnchor.textContent = material + " (" + count + ")";
+            } else {
+                materialAnchor.classList.add('display-none');
+            }
+        }
     })
 
     // iterate through yearInstalled and change the html labels to the most updated count 
     yearInstalled.forEach((count, year) => {
         var id = "d" + year;
-        var querySelect = "label[for='" + id + "']";
+        const yearAnchor = document.getElementById(id);
         // change the inner html.
-        document.querySelector(querySelect).innerHTML = "<label for = '" + id + "'> " + year + " (" + count + ")" + "</label>";
+        if (yearAnchor) {
+            if(count > 0) {
+                yearAnchor.textContent = year + " (" + count + ")";
+            } else {
+                yearAnchor.classList.add('display-none');
+            }
+        }
     });
 }
 
@@ -1127,7 +1197,6 @@ function applyRefocusOnBindings() {
     if (clusterBounds.isValid()) {
         map.fitBounds(clusterBounds, configMaps.boundsPadding);
     }
-
 }
 
 function closeSidebar() {
