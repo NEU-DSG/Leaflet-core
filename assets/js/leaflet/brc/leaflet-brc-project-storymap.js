@@ -1,13 +1,20 @@
+/***
+ * The leaflet-brc-project-storymap.js file has implementation related to rendering 
+ * and managing the Stroy Maps using Leaflet.js.
+ */
 jQuery(function() {
     
+// Tile map style 1 from cartocdn
 var cartoDBTile = L.tileLayer(configStoryMap.titleLayerMap, {
     attribution: configStoryMap.titleLayerAttribution
 });
 
+// Tile map style 2 from OpenStreet
 var openStreetTile = L.tileLayer(configStoryMap.titleLayerOpenStreet, {
     attribution: configStoryMap.titleLayerOpenStreetAttribution
 });
 
+// Creates a Leaflet map based on the provided configuration.
 var map = L.map('map', {
     center: configStoryMap.center,
     zoom: configStoryMap.zoom,
@@ -20,6 +27,7 @@ var baseMaps = {
     "OpenStreetMap": openStreetTile
 };
 
+// Adding two layers to the map.
 var layerControl = L.control.layers(baseMaps).addTo(map);
 
 var geoJsonObj = [];
@@ -43,19 +51,28 @@ invokeGetBindingsApi().then(response => {
     console.log("Some error happened with the api", err);
 });
 
+/***
+ * Check if user moved from the main map to the story map and filters the data
+ * based on the localStorage.
+ */
 function checkforFilters(geoJsonData) {
     if (localStorage.getItem("properties")) {
         const properties = JSON.parse(localStorage.getItem("properties"));
+        // If user selected a cluster or a single Binding then 
+        // filteredData field will have those bindings' Id. 
         if (properties.hasOwnProperty("filteredData")) {
             const filterDataArr = properties["filteredData"]
+            // Filter out the data which user selected in main map.
             geoJsonData["features"] = geoJsonData["features"].filter((binding) => {
                 return filterDataArr.includes(binding["properties"]["work"]);
             })
         }
+        // Clear the selected options.
         localStorage.setItem("properties", JSON.stringify({}))
     }
     return geoJsonData;
 }
+
 /***
  * Convert the bindings from json to geojson.
  */
@@ -111,6 +128,8 @@ function createPopUpHtmlForBinding(binding, imagFlag = true) {
         popUpHtml += "</h1><ul class='popup-list list-style-none'>";
     }
 
+    // Iterate over all the other key from bindings and add a list item content
+    // to the popup.
     for (const [key, value] of Object.entries(configStoryMap.bindingKeysObject)) {
         if (binding[key]) {
             popUpHtml += "<li class='popup-item'>";
@@ -195,7 +214,8 @@ function generateMarkersOnMap(jsonData) {
  */
 function createStoryMaps(layer, feature, jsonData) {
 
-    // This creates the contents of each chapter from the GeoJSON data. Unwanted items can be removed, and new ones can be added
+    // This creates the contents of each chapter from the GeoJSON data. 
+    //Unwanted items can be removed, and new ones can be added
     var chapter = $('<p></p>', {
         text: feature.properties['workLabel'],
         class: 'chapter-header'
@@ -212,6 +232,7 @@ function createStoryMaps(layer, feature, jsonData) {
             src: feature.properties["DRSImageURL"],
         });
     }
+    // Add work section to the story maps.
     var source = $('<a>', {
         text: feature.properties['work'],
         href: feature.properties['work'],
@@ -225,6 +246,8 @@ function createStoryMaps(layer, feature, jsonData) {
     var imgHolder = $('<div></div>', {
         class: 'img-holder'
     });
+
+    // add image section to the storymap.
     imgHolder.append(image);
     let popUpHtml = createPopUpHtmlForBinding(feature["properties"], false);
     container.append(chapter).append(imgHolder).append(source).append(popUpHtml).append("<div class='pbt-20'></div>");
@@ -237,6 +260,7 @@ function createStoryMaps(layer, feature, jsonData) {
         currentAreaTop += $('div#container' + i).height() + configStoryMap.imageContainerMargin;
     }
     currentAreaBottom = currentAreaTop + $('div#container' + feature.properties['id']).height();
+    // Zoom in and highlight the binding when user scroll on the right side of storymap. 
     $('div#contents').scroll(function() {
         if ($(this).scrollTop() >= currentAreaTop && $(this).scrollTop() < currentAreaBottom) {
             currentBox = feature.properties['id'];
@@ -249,10 +273,18 @@ function createStoryMaps(layer, feature, jsonData) {
     });
 }
 
+/**
+ * Marks the color of the highlighted binding to red 
+ * and rest of the binding to blue color.
+ * 
+ * @param {string} id 
+ * @param {Object} mainLayer 
+ */
 var markActiveColor = function(id, mainLayer) {
     geoJsonObj.eachLayer(function(layer) {
         if (layer && layer._icon) {
             if (layer == mainLayer) {
+                // Red icon is used when user highligth the binding.
                 mainLayer._icon.src = configStoryMap.redIconURL;
             } else {
                 layer._icon.src = configStoryMap.iconUrl;
@@ -270,4 +302,5 @@ function refreshLayer(data, map, coord, zoom) {
 $("div#contents").animate({
     scrollTop: configStoryMap.animateScrollTop
 });
+
 });

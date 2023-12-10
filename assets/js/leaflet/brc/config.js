@@ -1,3 +1,6 @@
+/***
+ * Constant configurations used in the leaflet map and other left hand side filters.
+ */
 const configMaps = {
     center: [42.361145, -71.057083],
     zoom: 13,
@@ -93,6 +96,9 @@ const configMaps = {
                         } group by ?work ?workDescription ?workLabel ?coords ?address`,
 };
 
+/***
+ * Constant configurations used in the Story Maps.
+ */
 const configStoryMap = {
     center: [42.361145, -71.057083],
     zoom: 13,
