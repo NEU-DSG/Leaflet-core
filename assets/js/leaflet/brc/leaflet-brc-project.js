@@ -5,13 +5,15 @@ jQuery(function() {
  */
 
 //A world Map is created here using leaflet js. 
-// Base tile creation and setup (stadia maps is being used here for tile layers).     
+// Base tile creation and setup.     
+// Tile map style 1 from cartocdn
 var cartoDBTile = L.tileLayer(configMaps.titleLayerMap, {
     maxZoom: configMaps.tileMaxZoom,
     minZoom: configMaps.tileMinZoom,
     attribution: configMaps.titleLayerAttribution,
 });
 
+// Tile map style 2 from OpenStreet
 var openStreetTile = L.tileLayer(configMaps.titleLayerOpenStreetMap, {
     maxZoom: configMaps.tileMaxZoom,
     minZoom: configMaps.tileMinZoom,
@@ -19,6 +21,7 @@ var openStreetTile = L.tileLayer(configMaps.titleLayerOpenStreetMap, {
 
 });
 
+// Creates a Leaflet map based on the provided configuration.
 var map = L.map('map', {
     zoom: configMaps.zoom,
     zoomSnap: 0.25,
@@ -32,7 +35,7 @@ var baseMaps = {
     "OpenStreetMap": openStreetTile
 };
 
-
+// Adding two layers to the map.
 var layerControl = L.control.layers(baseMaps).addTo(map);
 
 L.control.zoom({
@@ -95,6 +98,16 @@ var clusterMarkersGroup = L.markerClusterGroup({
     // zoomToBoundsOnClick: true
 });
 
+/** 
+ * Calculate the distance between any two point on a earth(in miles)
+ * point(xCoord, yCoord)
+ * 
+ * @param {Number} lat1 
+ * @param {Number} lon1 
+ * @param {Number} lat2 
+ * @param {Number} lon2 
+ * @returns distance in miles
+ */
 function distanceInMiles(lat1, lon1, lat2, lon2) {
     var R = 3958.8; // Earth's radius in miles
     var dLat = (lat2 - lat1) * Math.PI / 180;
@@ -107,18 +120,31 @@ function distanceInMiles(lat1, lon1, lat2, lon2) {
     return distance;
 }
 
+/**
+ * Redirect the user to the Story Map, by collecting all the bindings
+ * that are 0.25 miles radius from user selected area.
+ * 
+ * @param {Number} lat 
+ * @param {Number} lng 
+ */
 function redirectToStoryMap(lat, lng) {
     const filteredData = []
+    // Iterate over each marker and add the bindings to filter out in story map.
     clusterMarkersGroup.eachLayer(function(layer) {
         var markerLatLng = layer.getLatLng();
         var distance = distanceInMiles(lat, lng, markerLatLng.lat, markerLatLng.lng);
+        // choose only bindings that are of 0.25 miles radius.
         if (distance <= 0.25) {
             filteredData.push(layer["options"]["markerInformation"]["work"]);
         }
     });
+    
+    // Navigate to the Story Map with the filters.
     filterDataAndMoveToStoryMap(filteredData);
 }
 
+// Right click event which will prompt the user asking if they
+// want to redirect to Story Map or not.
 map.on('contextmenu', function(e) {
     const location = e.latlng
     var paragraphElement = document.createElement("p");
@@ -130,13 +156,18 @@ map.on('contextmenu', function(e) {
         redirectToStoryMap(location.lat, location.lng);
     };
     paragraphElement.appendChild(anchorTag);
+    // create a popup on right click.
     var popup = L.popup()
         .setLatLng(location)
         .setContent(paragraphElement)
         .openOn(map);
 });
 
-
+/***
+ * Store the selected bindings in localstorage and redirect to stroymap page. 
+ * 
+ * @param {Array} filteredData 
+ */
 function filterDataAndMoveToStoryMap(filteredData) {
     const properties = {
         "filteredData": filteredData
@@ -145,6 +176,7 @@ function filterDataAndMoveToStoryMap(filteredData) {
     window.location.href = "./brc-leaflet-storymap.html";
 }
 
+// Right click on the cluster trigger.
 clusterMarkersGroup.on('clustercontextmenu', function(a) {
     // a.layer is actually a cluster
     const location = a.latlng
@@ -153,6 +185,7 @@ clusterMarkersGroup.on('clustercontextmenu', function(a) {
     var anchorTag = document.createElement('a');
     anchorTag.href = '#';
     anchorTag.textContent = 'here';
+    // Move to the storymap page with selected bindings.
     anchorTag.onclick = function() {
         const childrens = a.layer.getAllChildMarkers()
         const filteredData = []
@@ -162,6 +195,7 @@ clusterMarkersGroup.on('clustercontextmenu', function(a) {
         filterDataAndMoveToStoryMap(filteredData);
     };
     paragraphElement.appendChild(anchorTag);
+    // Creates a popup
     var popup = L.popup()
         .setLatLng(location)
         .setContent(paragraphElement)
@@ -252,6 +286,7 @@ function addMarkerToTheMap(binding) {
     // binding the above html to the current marker.
     marker.bindPopup(popUpHtml);
 
+    // Right click event trigger on individual marker.
     marker.on('contextmenu', function(event) {
         const location = event.latlng
         var paragraphElement = document.createElement("p");
@@ -259,10 +294,12 @@ function addMarkerToTheMap(binding) {
         var anchorTag = document.createElement('a');
         anchorTag.href = '#';
         anchorTag.textContent = 'here';
+        // Navigate to story map page.
         anchorTag.onclick = function() {
             filterDataAndMoveToStoryMap([event.target.options.markerInformation["work"]]);
         };
         paragraphElement.appendChild(anchorTag);
+        // Creates a popup
         var popup = L.popup()
             .setLatLng(location)
             .setContent(paragraphElement)
@@ -632,6 +669,12 @@ function generateMarkersOnMap(jsonData) {
         filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
     });
 
+    /**
+     * Attributes based search for the bindings, 
+     * filters the data in leaflet map. Fuse plugin is used for searching. 
+     * 
+     * @param {Boolean} resetFlag 
+     */
     function searchForBindings(resetFlag) {
         // get searched value.
         var searchText = document.getElementById("search-box-input").value;
@@ -663,17 +706,22 @@ function generateMarkersOnMap(jsonData) {
             }
             // update the count and filters data.
             updateTheCountOfFilter(yearInstalled, categories, neighborhoods, materials);
+            // Clearing out the filter from the facets.
             resetTheFilters(yearInstalled, categories, neighborhoods, materials);
+            // Only show search related bindings and skip others.
             filterTheMarkers(yearInstalled, categories, neighborhoods, materials, true);
+            // Zoom on to show all the bindings, refocus.
             applyRefocusOnBindings();
     }
     // filter search click event handler.
     document.getElementById('filters-search').addEventListener('click', (e) => {
         searchForBindings(false);
     });
+    // Event that will trigger when reset button is clicked.
     document.getElementById('reset-button').addEventListener('click', (e) => {
         searchForBindings(true);
     });
+    // Event that will trigger when user press Enter key after searching. 
     $('#search-box-input').keypress(function(event) {
         var keycode = (event.keyCode ? event.keyCode : event.which);
         if (keycode == '13') {
@@ -751,8 +799,7 @@ function resetTheFilters(yearInstalled, categories, neighborhoods, materials) {
     // document.getElementById('material-selectall').checked = true;
 }
 /**
- * Filters the markers available on the map.
- * 
+ * Filters out the markers that are available on the map.
  * 
  */
 function filterTheMarkers(yearInstalled, categories, neighborhoods, materials, searchFlag, filterType, current_id) {
@@ -1192,6 +1239,9 @@ function addRemoveActiveItem(target, className) {
     element.classList.remove(className);
 }
 
+/**
+ * Fit all the bindings so that user can see.
+ */
 function applyRefocusOnBindings() {
     var clusterBounds = clusterMarkersGroup.getBounds();
     if (clusterBounds.isValid()) {
@@ -1208,12 +1258,14 @@ function closeSidebar() {
     // activeContent.classList.remove("active-content");
 }
 
+// hamburger icon click event 
 $('#short-sidebar-icon').on('click', function() {
     $('#sidebar').toggleClass('display-none');
     $('#short-sidebar').toggleClass('display-none');
     map.zoomOut(0.75);
 });
 
+// Event to close the sidebar panel. 
 $('#sidebar-icon').on('click', function() {
     $('#sidebar').toggleClass('display-none');
     $('#short-sidebar').toggleClass('display-none');
